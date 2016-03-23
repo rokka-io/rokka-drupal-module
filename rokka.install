@@ -1,0 +1,89 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Rokka module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function rokka_install() {}
+
+/**
+ * Implements hook_uninstall().
+ */
+function rokka_uninstall() {
+  $variables = array(
+    'rokka_api_base_url',
+    'rokka_api_key',
+    'rokka_api_secret',
+    'rokka_organization_name',
+    'rokka_service_is_enabled',
+    'rokka_source_image_style',
+  );
+  foreach($variables as $variable) {
+    variable_del($variable);
+  }
+}
+/**
+ * Implements hook_schema().
+ */
+function rokka_schema() {
+  $schema['rokka_metadata'] = array(
+    'description' => 'Stores Rokka.io files hashes.',
+    'fields' => array(
+      'fid' => array(
+        'description' => 'The {file_managed}.fid of the metadata.',
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'hash' => array(
+        'description' => "The Rokka.io hash (SHA1, 40 chars) of the file.",
+        'type'        => 'varchar',
+        'length'      => 40,
+        'not null'    => TRUE,
+      ),
+      'filesize' => array(
+        'type'        => 'int',
+        'size'        => 'big',
+        'not null'    => TRUE,
+        'unsigned'    => TRUE,
+      ),
+      'created' => array(
+        'type'        => 'int',
+        'not null'    => TRUE,
+        'unsigned'    => TRUE,
+      ),
+      'uri' => array(
+        'description' => "The original file URI.",
+        'type'        => 'varchar',
+        'not null'    => TRUE,
+        'length'      => 255,
+      ),
+    ),
+    'primary key'  => array('uri'),
+    'foreign keys' => array(
+      'file_managed' => array(
+        'table'   => 'file_managed',
+        'columns' => array('fid' => 'fid'),
+      ),
+    ),
+    'indexes' => array(
+      'hash'  => array('hash'),
+      'uri'   => array('uri'),
+    ),
+  );
+  return $schema;
+}
+
+/**
+ * Remove RokkaMetadata table index on fid field (not used).
+ */
+function rokka_update_7001() {
+  if (db_index_exists('rokka_metadata', 'fid')) {
+    db_drop_index('rokka_metadata', 'fid');
+  }
+}

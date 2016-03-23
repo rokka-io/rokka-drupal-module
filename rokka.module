@@ -1,0 +1,429 @@
+<?php
+/**
+ * @file
+ * Provides an integration for the Rokka service with Drupal.
+ */
+
+define('ROKKA_BASE_ADMIN_MENU_URL', 'admin/config/media/rokka');
+define('ROKKA_SCALE_MAX_WIDTH', 10000);
+define('ROKKA_SCALE_MAX_HEIGHT', 10000);
+
+/**
+ * Implements hook_menu().
+ */
+function rokka_menu() {
+  $base_path = ROKKA_BASE_ADMIN_MENU_URL;
+  $base_argnum = 3;
+
+  return array(
+    $base_path => array(
+      'title' => 'Rokka',
+      'description' => 'Configure Rokka integration service.',
+      'type' => MENU_NORMAL_ITEM,
+      'access arguments' => array('administer rokka'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('rokka_admin_settings_form'),
+      'file' => 'includes/rokka.admin.inc',
+    ),
+    $base_path . '/settings' => array(
+      'title'  => 'Settings',
+      'type'   => MENU_DEFAULT_LOCAL_TASK,
+      'weight' => 0,
+    ),
+    $base_path . '/sourceimages' => array(
+      'title'  => 'Source Images',
+      'type'   => MENU_LOCAL_TASK,
+      'access arguments' => array('administer rokka'),
+      'page callback' => 'rokka_admin_sourceimages_overview',
+      'file'   => 'includes/rokka.admin-sourceimages.inc',
+      'weight' => 2,
+    ),
+    $base_path . '/imagestack' => array(
+      'title'  => 'Image Stacks',
+      'type'   => MENU_LOCAL_TASK,
+      'access arguments' => array('administer rokka'),
+      'page callback' => 'rokka_admin_imagestack_overview',
+      'file'   => 'includes/rokka.admin-imagestack.inc',
+      'weight' => 3,
+    ),
+    $base_path . '/imagestack/%rokka_imagestack' => array(
+      'title callback'  => 'rokka_imagestack_title',
+      'title arguments' => array($base_argnum + 2),
+      'type'   => MENU_NORMAL_ITEM,
+      'access arguments'=> array('administer rokka'),
+      'page callback'   => 'rokka_admin_imagestack_item',
+      'page arguments'  => array($base_argnum + 2),
+      'file'   => 'includes/rokka.admin-imagestack.inc',
+    ),
+  );
+}
+
+/**
+ * Implements hook_permission().
+ */
+function rokka_permission() {
+  return array(
+    'administer rokka' => array(
+      'title' => t('Administer Rokka'),
+      'description' => t('Configure Rokka integration service.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_requirements().
+ */
+function rokka_requirements($phase) {
+  module_load_include('inc', 'rokka');
+  $requirements = array();
+
+  // Report cron status
+  if ($phase == 'runtime') {
+    // Don't check if the integration service is disabled.
+    $enabled = variable_get('rokka_service_is_enabled', FALSE);
+    $errorCode = rokka_validate_credentials();
+
+    // The integration is enabled, but the service is not correctly working.
+    if (TRUE == $enabled) {
+      if ($errorCode == 200) {
+        $requirements['rokka']['value'] = t('Rokka integration service is properly working.');
+      }
+      else {
+        $requirements['rokka'] = array(
+          'value' => t('Error in your Rokka.io integration [error #%errorcode]. Please verify the <a href="@url"> provided configuration</a>.', array(
+            '%errorcode' => $errorCode,
+            '@url' => url(ROKKA_BASE_ADMIN_MENU_URL),
+          )),
+          'severity' => REQUIREMENT_ERROR
+        );
+      }
+    }
+    $requirements['rokka']['title'] = t('Rokka integration service');
+  }
+  return $requirements;
+}
+
+/**
+ * @param $name
+ * @return bool|\Rokka\Client\Core\Stack
+ */
+function rokka_imagestack_load($name) {
+  if (empty($name))
+    return NULL;
+  module_load_include('inc', 'rokka', 'includes/rokka.imagestack.crud');
+  return rokka_crud_imagestack_load($name);
+}
+
+/**
+ * @param \Rokka\Client\Core\Stack $stack
+ * @return string
+ */
+function rokka_imagestack_title(\Rokka\Client\Core\Stack $stack) {
+  return $stack->name;
+}
+
+/**
+ * @param $className
+ * @return bool
+ */
+function _rokka_is_class_loaded($className) {
+  if (!module_exists('composer_manager')) {
+    return FALSE;
+  }
+
+  // If the module has been enabled, but the user didn't update composer
+  // libraries, prevent failing entirely.
+  try {
+    composer_manager_register_autoloader();
+  }
+  catch (\RuntimeException $e) {
+    watchdog('rokka', 'The Composer autoloader could not be registered. Run drush composer-rebuild and drush composer-manager update to update your vendor directory.');
+    // watchdog_exception('rokka', $e);
+    return FALSE;
+  }
+
+  if (!class_exists($className)) {
+    watchdog('rokka', 'The Rokka %className class is missing. Make sure all module updates have run. Otherwise, run drush composer-rebuild and drush composer-manager update to update your vendor directory.', array(
+      '%className' => $className
+    ));
+    return FALSE;
+  }
+  return TRUE;
+}
+
+/**
+ * Implements hook_stream_wrappers().
+ *
+ * Create a stream wrapper for Rokka.
+ * @see hook_stream_wrappers() from Amazons3.module
+ */
+function rokka_stream_wrappers() {
+  // This hook is called before hook_init(), so we have to manually register
+  // the autoloader. We also need to handle module upgrades where
+  // composer_manager might not be enabled yet.
+  if (!_rokka_is_class_loaded('Drupal\rokka\RokkaStreamWrapper'))
+    return array();
+
+  // If the module isn't configured yet, don't register the stream wrapper.
+  try {
+    \Drupal\rokka\Configuration::fromDrupalVariables();
+  }
+  catch (\InvalidArgumentException $e) {
+
+    if (current_path() == 'admin/config/media/file-system') {
+      drupal_set_message(t('The Rokka module <a href="@rokka-configure">needs to be configured</a> before setting it as a download method.', array(
+        '@rokka-configure' => url(ROKKA_BASE_ADMIN_MENU_URL, array(
+          'query' => array('destination' => current_path())
+        ))
+      )));
+    }
+
+    return array();
+  }
+
+  // getimagesize() calls require the stream to be seekable.
+  stream_context_set_default(['rokka' => ['seekable' => TRUE]]);
+
+  return array(
+    'rokka' => array(
+      'name' => t('Rokka.io Image service'),
+      'class' => 'Drupal\rokka\RokkaStreamWrapper',
+      'description' => t('Rokka.io image service.'),
+      // 'type' => STREAM_WRAPPERS_WRITE_VISIBLE,
+    ),
+  );
+}
+
+/**
+ * Implements hook_image_default_styles().
+ */
+function rokka_image_default_styles() {
+  return array(
+    'rokka_source' => array(
+      'label' => 'Rokka Source Image',
+      'effects' => array(),
+    )
+  );
+}
+
+/**
+ * Implements hook_image_style_save().
+ */
+function rokka_image_style_save($style) {
+  module_load_include('inc', 'rokka', 'includes/rokka.imagestack.crud');
+  // Delete the previously created stack, if available.
+  rokka_crud_imagestack_delete($style['name']);
+
+  if (!empty($style['is_new']))
+    return;
+
+  rokka_crud_imagestack_create($style);
+}
+
+/**
+ * Implements hook_image_style_delete().
+ */
+function rokka_image_style_delete($style) {
+  module_load_include('inc', 'rokka', 'includes/rokka.imagestack.crud');
+  if (rokka_crud_imagestack_delete($style['old_name'])) {
+    drupal_set_message(t('Image style %style was deleted from Rokka.io', array(
+      '%style' => $style['old_name'],
+    )));
+  }
+}
+
+/**
+ * Implements hook_image_style_path_alter().
+ *
+ * When we are using Rokka.io, we need to rewrite image style URLs to route
+ * through our own paths, thus be able to use the
+ *
+ * @return null
+ * @see Drupal.org issue #1358896
+ */
+function rokka_image_style_path_alter(&$result, $style_name, $uri) {
+  $scheme = file_uri_scheme($uri);
+  if ($scheme != 'rokka') {
+    return;
+  }
+
+  /** @var \Drupal\rokka\RokkaMetadata $rokkaMetadata */
+  $meta = entity_load_single('rokka_metadata', $uri);
+  if (!$meta) {
+    watchdog('rokka', 'Trying to alter image style for %uri, but missing RokkaMetadata!', array(
+      '%uri' => $uri
+    ), WATCHDOG_ERROR);
+    return;
+  }
+
+  module_load_include('inc', 'rokka');
+  $imageClient = rokka_get_current_client()->getImageClient();
+  $styleImageUri = $imageClient->getSourceImageUri($meta->getHash(), $style_name);
+  $result = $styleImageUri->__toString();
+}
+
+/**
+ * Implements hook_image_style_uri_token_query_alter().
+ *
+ * @see: https://www.drupal.org/node/2610308
+ *
+ * @param array $token_query
+ * @param array $context
+ */
+function rokka_image_style_uri_token_query_alter(&$token_query, $context) {
+  $scheme = file_uri_scheme($context['path']);
+  if ($scheme != 'rokka') {
+    return;
+  }
+  // Avoid putting tokens query to Rokka.io (styles are automatically flushed)
+  $token_query = array();
+}
+
+/**
+ * Implements hook_file_presave().
+ */
+function rokka_file_presave($file) {
+  // Do not bother proceeding if this file is not handled by Rokka.io or if it
+  // does not have an image mime type.
+  if (file_uri_scheme($file->uri) !== 'rokka' || file_entity_file_get_mimetype_type($file) != 'image') {
+    return;
+  }
+
+  /** @var \Drupal\rokka\RokkaMetadata $rokkaMetadata */
+  $rokkaMetadata = entity_load_single('rokka_metadata', $file->uri);
+  if (!$rokkaMetadata) {
+    watchdog('rokka', 'Error altering Drupal file "@uri": RokkaMetadata not found!', array(
+      '@uri' => $file->uri
+    ));
+    return;
+  }
+
+  // Since we're only able to get the filesize from the {rokka_metadata} table
+  // let's update the file information here.
+  $file->filesize = $rokkaMetadata->getFilesize();
+  // $file->metadata['rokka_hash'] = $rokkaMetadata->getHash();
+}
+
+/**
+ * Implements hook_file_metadata_info().
+ */
+function rokka_file_metadata_info() {
+  // Adding Rokka file HASH to standard uploaded files in Drupal.
+  return array(
+    'rokka_hash' => array(
+      'label' => 'Rokka HASH',
+      'type' => 'varchar',
+      'length' => 40
+    ),
+  );
+}
+
+/**
+ * Implements hook_file_validate().
+ * {@inheritdoc}
+ */
+function rokka_file_validate($file) {
+  // Do not bother proceeding if this file is not a Rokka.io uploaded
+  if (file_uri_scheme($file->destination) !== 'rokka') {
+    return array();
+  }
+
+  // Avoid uploading non-image files to Rokka.io
+  $errors = array();
+  if (file_entity_file_get_mimetype_type($file) != 'image') {
+    $errors[] = t('Rokka.io only accepts image type files, the uploaded file reports a "%mime" type.', array('%mime' => $file->mimetype));
+  }
+  return $errors;
+}
+
+/**
+ * Implements hook_entity_info().
+ */
+function rokka_entity_info() {
+  // This hook is called before hook_init(), so we have to manually register
+  // the autoloader. We also need to handle module upgrades where
+  // composer_manager might not be enabled yet.
+  if (!_rokka_is_class_loaded('Drupal\rokka\RokkaMetadataController')) {
+    return array();
+  }
+
+  $return = array(
+    'rokka_metadata' => array(
+      'label' => t('Rokka Metadata'),
+      'entity class' => 'Drupal\rokka\RokkaMetadata',
+      'controller class' => 'Drupal\rokka\RokkaMetadataController',
+      'base table' => 'rokka_metadata',
+      'entity keys' => array(
+        'id' => 'uri',
+      ),
+
+      'label callback' => 'entity_class_label',
+      'uri callback' => 'entity_class_uri',
+      'module' => 'rokka',
+      'properties' => array(
+        'fid' =>  array(
+          'label' => t('Drupal File'),
+          'type' => 'file',
+          'setter callback' => 'entity_property_verbatim_set',
+          'required' => FALSE,
+          'schema field' => 'fid',
+        )
+      )
+    ),
+  );
+
+  return $return;
+}
+
+/**
+ * Implements hook_focal_point_save().
+ */
+function rokka_focal_point_save($element) {
+  $fid = $element['fid'];
+  $point = focal_point_parse($element['focal_point']);
+
+  $file = file_load($fid);
+  if ('rokka' != file_uri_scheme($file->uri)) {
+    return;
+  }
+
+  // Converting the percentage-based points to pixel-based offsets.
+  $x = (int) ($file->width * ($point['x-offset'] / 100));
+  $y = (int) ($file->height * ($point['y-offset'] / 100));
+
+  $client = rokka_get_current_client();
+  $imageClient = $client->getImageClient();
+  $focusArea = new \Rokka\Client\Core\DynamicMetadata\SubjectArea($x, $y, 1, 1);
+
+  /** @var \Drupal\rokka\RokkaMetadata $meta */
+  $meta = entity_load_single('rokka_metadata', $file->uri);
+
+  $newHash = $imageClient->setDynamicMetadata($focusArea, $meta->getHash());
+
+  $params = array('%hash' => $meta->getHash(), '%fid' => $fid, '%x' => $x, '%y' => $y);
+
+  // If we got an Hash as a result, we need to update the current file's hash
+  if ($newHash) {
+    $params['%count'] = 0;
+    $params['%new-hash'] = $newHash;
+
+    // Check if the old hash has been updated
+    if ($meta->getHash() !== $newHash) {
+      // We get a new Hash, update all the images sharing the old Hash
+
+      $num_updated = db_update('rokka_metadata')
+        ->fields(array('hash' => $newHash))
+        ->condition('hash', $meta->getHash())
+        ->execute();
+
+      $params['%count'] = $num_updated;
+
+    }
+
+    watchdog('rokka', 'Saving SubjectArea for %hash (fid: %fid) "x:%x y:%y". Updated RokkaMeta entities: %count (new hash: %new-hash)', $params);
+
+  } else {
+    // Something went wrong here!
+    watchdog('rokka', 'Error saving SubjectArea for image %hash (fid: %fid) "x:%x y:%y"', $params, WATCHDOG_ERROR);
+  }
+}

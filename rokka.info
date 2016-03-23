@@ -1,0 +1,8 @@
+name = Rokka
+description = Provides Rokka.io integration with Drupal's file system.
+core = 7.x
+configure = admin/config/media/rokka
+package = Media
+
+dependencies[] = image
+dependencies[] = composer_manager
