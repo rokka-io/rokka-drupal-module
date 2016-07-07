@@ -57,19 +57,27 @@ function rokka_crud_imagestack_load($name) {
 }
 
 /**
- * @param array $style
+ * @param \Drupal\rokka\RokkaStack $rokkaStackEntity
  * @return bool|\Rokka\Client\Core\Stack
  */
-function rokka_crud_imagestack_create(array $style) {
-  $name = $style['name'];
-  $stackOperationCollection = \Drupal\rokka\ImageStyleHelper::buildStackOperationCollection($style['effects']);
+function rokka_crud_imagestack_create(\Drupal\rokka\RokkaStack $rokkaStackEntity) {
+  $name = $rokkaStackEntity->getImageStyle();
 
-  // @todo: we can not create a StackOperationCollection with no operations, but Drupal can!
+  $image_style = image_style_load($rokkaStackEntity->getImageStyle());
+  $stackOperationCollection = \Drupal\rokka\ImageStyleHelper::buildStackOperationCollection($image_style['effects']);
+
+  // We can not create a StackOperationCollection with no operations, but Drupal can!
   if ($stackOperationCollection) {
     try {
       $client = rokka_get_current_client();
-      $stack = $client->getImageClient()->createStack($name, $stackOperationCollection);
-      if (count($stackOperationCollection) < count($style['effects'])) {
+      $stack = $client->getImageClient()->createStack(
+        $rokkaStackEntity->getImageStyle(),
+        $stackOperationCollection,
+        NULL,
+        $rokkaStackEntity->getStackOptions()
+      );
+
+      if (count($stackOperationCollection) < count($image_style['effects'])) {
         watchdog('rokka', 'Image style "%imagestyle" partially uploaded to Rokka.io"', array('%imagestyle' => $name), WATCHDOG_WARNING);
         drupal_set_message(t('Can not fully convert the style "%style" to Rokka.io: some effects are not available on Rokka.io!', array(
           '%style' => $name,
@@ -94,7 +102,7 @@ function rokka_crud_imagestack_create(array $style) {
       return FALSE;
     }
   }
-  if (!$stackOperationCollection && !empty($style['effects'])) {
+  if (!$stackOperationCollection && !empty($image_style['effects'])) {
     drupal_set_message(t('Can not convert the style "!style" to Rokka.io: all of the image-effects are not available on Rokka.io!', array(
       '!style' => l($name, 'admin/config/media/image-styles/edit/'. $name),
     )), 'error');
@@ -138,7 +146,16 @@ function rokka_crud_imagestack_rebuild_all() {
   }
 
   $styles = image_styles();
-  foreach ($styles as $styleName => $style) {
-    rokka_crud_imagestack_create($style);
+  foreach ($styles as $style_name => $style) {
+
+    /** @var \Drupal\rokka\RokkaStack $stack */
+    $stack = entity_load_single('rokka_stack', $style_name);
+    if (!$stack) {
+      $stack = entity_create('rokka_stack', array());
+      $stack->setImageStyle($style_name);
+      $stack->save();
+    }
+
+    rokka_crud_imagestack_create($stack);
   }
 }

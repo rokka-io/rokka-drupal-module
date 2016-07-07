@@ -90,7 +90,7 @@ function rokka_requirements($phase) {
       }
       else {
         $requirements['rokka'] = array(
-          'value' => t('Error in your Rokka.io integration [error #%errorcode]. Please verify the <a href="@url"> provided configuration</a>.', array(
+          'value' => t('Error in your Rokka.io integration [error #%errorcode]. Please verify the <a href="@url">provided configuration</a>.', array(
             '%errorcode' => $errorCode,
             '@url' => url(ROKKA_BASE_ADMIN_MENU_URL),
           )),
@@ -207,17 +207,43 @@ function rokka_image_default_styles() {
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
+  form_load_include($form_state, 'inc', 'rokka', 'includes/rokka.admin-imagestyle');
+  _rokka_add_imagestyle_form_elements($form, $form_state);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function rokka_form_image_style_add_form_alter(&$form, &$form_state, $form_id) {
+  form_load_include($form_state, 'inc', 'rokka', 'includes/rokka.admin-imagestyle');
+  _rokka_add_imagestyle_form_elements($form, $form_state);
+}
+
+/**
  * Implements hook_image_style_save().
  */
 function rokka_image_style_save($style) {
+  if (isset($style['old_name'])) {
+    /** @var \Drupal\rokka\RokkaStack $stack */
+    $stack = entity_load_single('rokka_stack', $style['old_name']);
+
+    // If the image_style has just changed name: update the RokkaStack entity
+    if ($stack) {
+      $stack->delete();
+      $stack->setImageStyle($style['name']);
+      $stack->save();
+    }
+  } else {
+    $stack = entity_load_single('rokka_stack', $style['name']);
+  }
+
   module_load_include('inc', 'rokka', 'includes/rokka.imagestack.crud');
   // Delete the previously created stack, if available.
-  rokka_crud_imagestack_delete($style['name']);
-
-  if (!empty($style['is_new']))
-    return;
-
-  rokka_crud_imagestack_create($style);
+  rokka_crud_imagestack_delete($stack->getImageStyle());
+  rokka_crud_imagestack_create($stack);
 }
 
 /**
@@ -369,6 +395,19 @@ function rokka_entity_info() {
           'schema field' => 'fid',
         )
       )
+    ),
+    'rokka_stack' => array(
+      'label' => t('Rokka Stack'),
+      'entity class' => 'Drupal\rokka\RokkaStack',
+      'controller class' => 'Drupal\rokka\RokkaStackController',
+      'base table' => 'rokka_stack',
+      'entity keys' => array(
+        'id' => 'image_style',
+      ),
+
+      'label callback' => 'entity_class_label',
+      'uri callback' => 'entity_class_uri',
+      'module' => 'rokka',
     ),
   );
 

@@ -76,9 +76,73 @@ function rokka_schema() {
       'uri'   => array('uri'),
     ),
   );
+  $schema['rokka_stack'] = array(
+    'description' => 'Stores Rokka.io Stack info.',
+    'fields' => array(
+      'image_style' => array(
+        'description' => 'The {image_styles}.name reference.',
+        'type'        => 'varchar',
+        'not null'    => TRUE,
+        'length'      => 255,
+      ),
+      'created' => array(
+        'type'        => 'int',
+        'not null'    => TRUE,
+        'unsigned'    => TRUE,
+      ),
+      'options' => array(
+        'description' => 'Stack options',
+        'type'        => 'text',
+        'not null'    => FALSE,
+        'serialize'   => TRUE,
+      ),
+    ),
+    'primary key'  => array('image_style'),
+    'foreign keys' => array(
+      'file_managed' => array(
+        'table'   => 'image_styles',
+        'columns' => array('image_style' => 'name'),
+      ),
+    ),
+  );
   return $schema;
 }
 
+/**
+ * Add the RokkaStack table.
+ */
+function rokka_update_7002() {
+  $schema['rokka_stack'] = array(
+    'description' => 'Stores Rokka.io Stack info.',
+    'fields' => array(
+      'image_style' => array(
+        'description' => 'The {image_styles}.label of the Stack.',
+        'type'        => 'varchar',
+        'not null'    => TRUE,
+        'length'      => 255,
+      ),
+      'created' => array(
+        'type'        => 'int',
+        'not null'    => TRUE,
+        'unsigned'    => TRUE,
+      ),
+      'options' => array(
+        'description' => 'Stack options',
+        'type'        => 'text',
+        'not null'    => FALSE,
+        'serialize'   => TRUE,
+      ),
+    ),
+    'primary key'  => array('image_style'),
+    'foreign keys' => array(
+      'file_managed' => array(
+        'table'   => 'image_styles',
+        'columns' => array('image_style' => 'name'),
+      ),
+    ),
+  );
+  db_create_table('rokka_stack', $schema['rokka_stack']);
+}
 /**
  * Remove RokkaMetadata table index on fid field (not used).
  */

@@ -93,7 +93,23 @@ function rokka_admin_imagestack_operations_form_submit($form, $form_state) {
  */
 function rokka_admin_imagestack_item(Stack $stack) {
   module_load_include('inc', 'rokka');
-  $header = array('name', 'options');
+
+  $header = array('option', 'value');
+  $rows = array();
+  foreach($stack->getStackOptions() as $option => $value) {
+    $rows[] = array(
+      $option,
+      $value
+    );
+  }
+  $output = theme('table', array(
+    'header' => $header,
+    'rows'   => $rows,
+    'empty'  => t('No Operations found on Rokka.io service for this ImageStack.'),
+  ));
+
+
+  $header = array('operation', 'options');
   $rows = array();
   foreach($stack->getStackOperations() as $operation) {
     $rows[] = array(
@@ -101,10 +117,11 @@ function rokka_admin_imagestack_item(Stack $stack) {
       json_encode($operation->options),
     );
   }
-
-  return theme('table', array(
+  $output .= theme('table', array(
     'header' => $header,
     'rows'   => $rows,
     'empty'  => t('No Operations found on Rokka.io service for this ImageStack.'),
   ));
+
+  return $output;
 }
