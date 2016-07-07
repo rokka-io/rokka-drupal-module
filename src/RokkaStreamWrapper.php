@@ -62,7 +62,6 @@ class RokkaStreamWrapper extends StreamWrapper implements \DrupalStreamWrapperIn
    * @todo
    */
   public static function getMimeType($uri, $mapping = NULL) {
-    // dpm([__FUNCTION__ => func_get_args()]);
     //*
     if (!isset($mapping)) {
       // The default file map, defined in file.mimetypes.inc is quite big.
