@@ -64,8 +64,10 @@ function _rokka_add_imagestyle_form_elements(&$form, $form_state) {
 
   $form['#validate'][] ='rokka_image_style_form_validate';
 
-  // Let our submit function take the precedence here.
+  // Let our submit function be executed before the Image Style callbacks for
+  // both "Submit" or "Override".
   array_unshift($form['#submit'], 'rokka_image_style_form_submit');
+  array_unshift($form['actions']['override']['#submit'], 'rokka_image_style_form_submit');
 
   // Move the submit button to the bottom.
   $form['submit']['#weight'] = 10;
