@@ -411,6 +411,12 @@ function rokka_entity_info() {
     ),
   );
 
+  // Enable integration with EntityCache, if module exists.
+  if (module_exists('entitycache')) {
+    $return['rokka_metadata']['field cache'] = FALSE;
+    $return['rokka_metadata']['entity cache'] = TRUE;
+  }
+
   return $return;
 }
 
