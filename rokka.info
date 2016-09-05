@@ -6,4 +6,5 @@ package = Media
 
 dependencies[] = image
 dependencies[] = entity
+dependencies[] = file_entity
 dependencies[] = composer_manager
