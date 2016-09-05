@@ -468,6 +468,16 @@ function rokka_focal_point_save($element) {
         '%count' => $num_updated,
       ), WATCHDOG_INFO);
 
+      // We need to properly reset the EntityCache of the updated Rokka images:
+      $q = new \EntityFieldQuery();
+      $q->entityCondition('entity_type', 'rokka_metadata')
+        ->propertyCondition('hash', $newHash);
+      $metas = $q->execute();
+
+      if ($metas && !empty($metas['rokka_metadata'])) {
+        $ids = array_keys($metas['rokka_metadata']);
+        entity_get_controller('rokka_metadata')->resetCache($ids);
+      }
     }
 
   } else {
