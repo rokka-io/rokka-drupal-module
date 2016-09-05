@@ -118,7 +118,7 @@ class RokkaStreamWrapper extends StreamWrapper implements \DrupalStreamWrapperIn
     if ( !($meta instanceof RokkaMetadata)) {
       watchdog('rokka', 'Error getting getExternalUrl() for "@uri": RokkaMetadata not found!', array(
         '@uri' => $this->uri
-      ));
+      ), WATCHDOG_CRITICAL);
       return NULL;
     }
 
@@ -158,7 +158,10 @@ class RokkaStreamWrapper extends StreamWrapper implements \DrupalStreamWrapperIn
    * Rokka.io, the callback receives the SourceImage returned by the
    * $client->uploadSourceimage() invocation.
    *
+   * @see RokkaStreamWrapper::stream_flush()
+   *
    * @param SourceImage $sourceImage
+   *
    * @return bool
    */
   protected function doPostSourceImageSaved(SourceImage $sourceImage) {
@@ -169,12 +172,21 @@ class RokkaStreamWrapper extends StreamWrapper implements \DrupalStreamWrapperIn
     // First check if the URI is already tracked (i.e. the file has been overwritten).
     $meta = $this->doGetMetadataFromUri($this->uri);
     if ($meta) {
-      watchdog('rokka', 'Image replaced on Rokka: ' . $this->uri . ' old-hash:' . $meta->getHash() .' new-hash:' . $sourceImage->hash);
 
       // If the two images are the same we're done, just return true.
       if ($meta->getHash() == $sourceImage->hash) {
+        watchdog('rokka', 'Image re-uploaded to Rokka for "%uri": "%hash" (hash did not change)', array(
+          '%uri' => $this->uri,
+          '%hash' => $sourceImage->hash
+        ), WATCHDOG_DEBUG);
         return true;
       }
+
+      watchdog('rokka', 'Image replaced on Rokka for "%uri": "%hash" (old hash: "%oldHash")', array(
+        '%uri' => $this->uri,
+        '%oldHash' => $meta->getHash(),
+        '%hash' => $sourceImage->hash
+      ), WATCHDOG_DEBUG);
 
       // Update the RokkaMetadata with the new data coming from the uploaded image.
       $meta->hash = $sourceImage->hash;
@@ -182,7 +194,11 @@ class RokkaStreamWrapper extends StreamWrapper implements \DrupalStreamWrapperIn
       $meta->filesize = $sourceImage->size;
     }
     else {
-      watchdog('rokka', 'New Image uploaded to Rokka: ' . $this->uri . ' hash:' . $sourceImage->hash);
+      watchdog('rokka', 'New Image uploaded to Rokka for "%uri: "%hash"', array(
+        '%uri' => $this->uri,
+        '%hash' => $sourceImage->hash
+      ), WATCHDOG_DEBUG);
+
       // This is a new URI, track it in our RokkaMetadata entities.
       $meta = entity_create('rokka_metadata', array(
         'uri' => $this->uri,
@@ -248,17 +264,17 @@ class RokkaStreamWrapper extends StreamWrapper implements \DrupalStreamWrapperIn
     if (!empty($metas['rokka_metadata']) && count($metas['rokka_metadata']) > 1) {
       // Remove the Drupal image and FID, but don't remove the Rokka's image.
       $this->doPostSourceImageDeleted($meta);
-      watchdog('rokka', 'Image file "%uri" deleted, but kept in Rokka since HASH %hash is not unique.', array(
+      watchdog('rokka', 'Image file "%uri" deleted, but kept in Rokka since HASH "%hash" is not unique on Drupal.', array(
         '%uri' => $uri,
         '%hash' => $meta->getHash()
-      ));
+      ), WATCHDOG_DEBUG);
       return TRUE;
     }
 
     watchdog('rokka', 'Deleting image file "%uri".', array(
       '%uri' => $uri,
       '%hash' => $meta->getHash()
-    ));
+    ), WATCHDOG_DEBUG);
 
     // Else, go on and let's our parent delete the Rokka image instance.
     return parent::unlink($uri);
@@ -281,13 +297,16 @@ class RokkaStreamWrapper extends StreamWrapper implements \DrupalStreamWrapperIn
       // If we got a GuzzleException here, means that something happened during
       // the data transfer. We throw the exception to Drupal.
       if ($exception instanceof GuzzleException) {
-        drupal_set_message(t('An error occurred while uploading your image to Rokka.io'), 'error');
-        watchdog('rokka', 'Exception caught in triggerException(): %exception', array(
-          '%exception' => $exception->getMessage()
-        ));
-        if (!($flags & STREAM_URL_STAT_QUIET)) {
-          throw $exception;
-        }
+        drupal_set_message(t('An error occurred while communicating with the Rokka.io server!'), 'error');
+      }
+
+      watchdog('rokka', 'Exception caught in triggerException(). Exception(%exceptionCode) "%exceptionMessage"', array(
+        '%exceptionCode' => $exception->getCode(),
+        '%exceptionMessage' => $exception->getMessage(),
+      ), WATCHDOG_CRITICAL);
+
+      if (!($flags & STREAM_URL_STAT_QUIET)) {
+        throw $exception;
       }
     }
 
