@@ -442,33 +442,36 @@ function rokka_focal_point_save($element) {
 
   /** @var \Drupal\rokka\RokkaMetadata $meta */
   $meta = entity_load_single('rokka_metadata', $file->uri);
+  $params = array('%hash' => $meta->getHash(), '%fid' => $fid, '%x' => $x, '%y' => $y);
 
   $newHash = $imageClient->setDynamicMetadata($focusArea, $meta->getHash());
-
-  $params = array('%hash' => $meta->getHash(), '%fid' => $fid, '%x' => $x, '%y' => $y);
 
   // If we got an Hash as a result, we need to update the current file's hash
   if ($newHash) {
     $params['%count'] = 0;
     $params['%new-hash'] = $newHash;
 
+    watchdog('rokka', 'SubjectArea saved for "%hash": new hash "%new-hash" (fid: %fid, area: "x:%x y:%y")',
+      $params, WATCHDOG_INFO
+    );
+
     // Check if the old hash has been updated
     if ($meta->getHash() !== $newHash) {
-      // We get a new Hash, update all the images sharing the old Hash
 
+      // We get a new Hash, update all the images sharing the old Hash
       $num_updated = db_update('rokka_metadata')
         ->fields(array('hash' => $newHash))
         ->condition('hash', $meta->getHash())
         ->execute();
 
-      $params['%count'] = $num_updated;
+      watchdog('rokka', 'Updated RokkaMeta entities with the new hash: %count', array(
+        '%count' => $num_updated,
+      ), WATCHDOG_INFO);
 
     }
 
-    watchdog('rokka', 'Saving SubjectArea for %hash (fid: %fid) "x:%x y:%y". Updated RokkaMeta entities: %count (new hash: %new-hash)', $params);
-
   } else {
     // Something went wrong here!
-    watchdog('rokka', 'Error saving SubjectArea for image %hash (fid: %fid) "x:%x y:%y"', $params, WATCHDOG_ERROR);
+    watchdog('rokka', 'Error saving SubjectArea for image "%hash" (fid: %fid, area: "x:%x y:%y")', $params, WATCHDOG_ERROR);
   }
 }

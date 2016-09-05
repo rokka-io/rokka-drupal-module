@@ -194,7 +194,7 @@ class RokkaStreamWrapper extends StreamWrapper implements \DrupalStreamWrapperIn
       $meta->filesize = $sourceImage->size;
     }
     else {
-      watchdog('rokka', 'New Image uploaded to Rokka for "%uri: "%hash"', array(
+      watchdog('rokka', 'New Image uploaded to Rokka for "%uri": "%hash"', array(
         '%uri' => $this->uri,
         '%hash' => $sourceImage->hash
       ), WATCHDOG_DEBUG);
@@ -300,14 +300,16 @@ class RokkaStreamWrapper extends StreamWrapper implements \DrupalStreamWrapperIn
         drupal_set_message(t('An error occurred while communicating with the Rokka.io server!'), 'error');
       }
 
-      watchdog('rokka', 'Exception caught in triggerException(). Exception(%exceptionCode) "%exceptionMessage"', array(
+      watchdog('rokka', 'Exception caught: %exceptionCode "%exceptionMessage". In %file at line %line.', array(
         '%exceptionCode' => $exception->getCode(),
         '%exceptionMessage' => $exception->getMessage(),
+        '%file' => $exception->getFile(),
+        '%line' => $exception->getLine()
       ), WATCHDOG_CRITICAL);
+    }
 
-      if (!($flags & STREAM_URL_STAT_QUIET)) {
-        throw $exception;
-      }
+    if (!($flags & STREAM_URL_STAT_QUIET)) {
+      throw $exception;
     }
 
     return parent::triggerException($exceptions, $flags);
