@@ -142,15 +142,15 @@ abstract class StreamWrapper {
     $this->uri = $path;
 
     // We don't care about the binary flag
-    $this->mode = $mode = rtrim($mode, 'bt');
+    $this->mode = rtrim($mode, 'bt');
 
     // $this->params = $params = $this->getParams($path);
     $exceptions = array();
-    if (strpos($mode, '+')) {
-      $exceptions[] =  new \LogicException('The RokkaStreamWrapper does not support simultaneous reading and writing (mode: {'.$mode.'}).');
+    if (strpos($this->mode, '+')) {
+      $exceptions[] =  new \LogicException('The RokkaStreamWrapper does not support simultaneous reading and writing (mode: {'.$this->mode.'}).');
     }
-    if (!in_array($mode, static::$supportedModes)) {
-      $exceptions[] = new \LogicException('Mode not supported: {'.$mode.'}. Use one "r", "w".', 400);
+    if (!in_array($this->mode, static::$supportedModes)) {
+      $exceptions[] = new \LogicException('Mode not supported: {'.$this->mode.'}. Use one "r", "w".', 400);
     }
 
     $ret = NULL;
@@ -158,11 +158,11 @@ abstract class StreamWrapper {
       // This stream is Write-Only since the stream is not reversible for Read
       // and Write operations from the same filename: to read from a previously
       // written filename, the HASH must be provided.
-      if ('w' == $mode) {
+      if ('w' == $this->mode) {
         $ret = $this->openWriteStream($options, $exceptions);
       }
 
-      if ('r' == $mode) {
+      if ('r' == $this->mode) {
         $ret = $this->openReadStream($options, $exceptions);
       }
     }
@@ -214,9 +214,9 @@ abstract class StreamWrapper {
    */
   public function stream_flush()
   {
-    if ($this->mode == 'r') {
-      $exception = new \LogicException('RokkaStreamWrapper: Can not flush a read-only Stream.', 500);
-      return $this->triggerException($exception);
+    if ('r' == $this->mode) {
+      // Read only Streams can not be flushed, just return true.
+      return true;
     }
     $this->body->rewind();
     try {
