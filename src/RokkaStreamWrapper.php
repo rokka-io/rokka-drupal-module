@@ -167,7 +167,7 @@ class RokkaStreamWrapper extends StreamWrapper implements \DrupalStreamWrapperIn
     // the values returned by Rokka such as: hash, filesize, ...
 
     // First check if the URI is already tracked (i.e. the file has been overwritten).
-    $meta =$this->doGetMetadataFromUri($this->uri);
+    $meta = $this->doGetMetadataFromUri($this->uri);
     if ($meta) {
       watchdog('rokka', 'Image replaced on Rokka: ' . $this->uri . ' old-hash:' . $meta->getHash() .' new-hash:' . $sourceImage->hash);
 

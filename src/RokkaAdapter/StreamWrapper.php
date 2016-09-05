@@ -31,7 +31,6 @@
 
 namespace Drupal\rokka\RokkaAdapter;
 
-use Drupal\rokka\ImageStyleHelper;
 use GuzzleHttp\Psr7\CachingStream;
 use GuzzleHttp\Psr7\Stream;
 use Rokka\Client\Core\SourceImage;
@@ -148,10 +147,10 @@ abstract class StreamWrapper {
     // $this->params = $params = $this->getParams($path);
     $exceptions = array();
     if (strpos($mode, '+')) {
-      $exceptions[] =  new \LogicException("The RokkaStreamWrapper does not support simultaneous reading and writing (mode: {$mode}).");
+      $exceptions[] =  new \LogicException('The RokkaStreamWrapper does not support simultaneous reading and writing (mode: {'.$mode.'}).');
     }
     if (!in_array($mode, static::$supportedModes)) {
-      $exceptions[] = new \LogicException("Mode not supported: {$mode}. Use one 'r', 'w'.", 400);
+      $exceptions[] = new \LogicException('Mode not supported: {'.$mode.'}. Use one "r", "w".', 400);
     }
 
     $ret = NULL;
@@ -163,7 +162,7 @@ abstract class StreamWrapper {
         $ret = $this->openWriteStream($options, $exceptions);
       }
 
-      if ($mode == 'r') {
+      if ('r' == $mode) {
         $ret = $this->openReadStream($options, $exceptions);
       }
     }
@@ -356,7 +355,7 @@ abstract class StreamWrapper {
    * The Rokka.io service has no locking capability, so return TRUE.
    *
    * @return bool
-   *   Always returns TRUE at the present time. (no support)
+   *   Always returns TRUE at the present time. (not supported)
    */
   public function stream_lock($operation) {
     return TRUE;
@@ -416,8 +415,8 @@ abstract class StreamWrapper {
   /**
    * Trigger one or more errors
    *
-   * @param \Exception[] $exceptions
-   * @param mixed        $flags  If set to STREAM_URL_STAT_QUIET, then no error or exception occurs
+   * @param \Exception|\Exception[] $exceptions
+   * @param mixed                   $flags  If set to STREAM_URL_STAT_QUIET, then no error or exception occurs
    * @return bool
    */
   protected function triggerException($exceptions, $flags = null)
