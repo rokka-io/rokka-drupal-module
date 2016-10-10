@@ -276,7 +276,7 @@ function rokka_image_style_path_alter(&$result, $style_name, $uri) {
     return;
   }
 
-  /** @var \Drupal\rokka\RokkaMetadata $rokkaMetadata */
+  /** @var \Drupal\rokka\RokkaMetadata $meta */
   $meta = entity_load_single('rokka_metadata', $uri);
   if (!$meta) {
     watchdog('rokka', 'Trying to alter image style for %uri, but missing RokkaMetadata!', array(
