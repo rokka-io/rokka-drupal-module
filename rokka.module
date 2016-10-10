@@ -252,6 +252,9 @@ function rokka_image_style_save($style) {
 function rokka_image_style_delete($style) {
   module_load_include('inc', 'rokka', 'includes/rokka.imagestack.crud');
   if (rokka_crud_imagestack_delete($style['old_name'])) {
+    watchdog('rokka', 'Image style %style was deleted from Rokka.io', array(
+      '%style' => $style['old_name'],
+    ), WATCHDOG_DEBUG);
     drupal_set_message(t('Image style %style was deleted from Rokka.io', array(
       '%style' => $style['old_name'],
     )));
