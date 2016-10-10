@@ -285,9 +285,18 @@ function rokka_image_style_path_alter(&$result, $style_name, $uri) {
     return;
   }
 
+  $format = variable_get('rokka_default_image_format', 'jpg');
+  $name = NULL;
+  if (!variable_get('rokka_use_hash_as_name', TRUE)) {
+    $info = pathinfo($meta->getUri());
+    // Rokka.io accepts Filenames in "[a-z0-9-]" format only, for now, make use
+    // of the previous transliteration to force dashes and lowercase here.
+    $name = str_replace('_', '-', strtolower($info['filename']));
+  }
+
   module_load_include('inc', 'rokka');
   $imageClient = rokka_get_current_client()->getImageClient();
-  $styleImageUri = $imageClient->getSourceImageUri($meta->getHash(), $style_name);
+  $styleImageUri = $imageClient->getSourceImageUri($meta->getHash(), $style_name, $format, $name);
   $result = $styleImageUri->__toString();
 }
 

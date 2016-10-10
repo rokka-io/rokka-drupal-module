@@ -69,6 +69,32 @@ function rokka_admin_settings_form($form, $form_state) {
       )
     ),
   );
+
+  $formats = \Drupal\rokka\Client::getFileFormats();
+  foreach ($formats as &$format) {
+    $format = t($format);
+  }
+  $form['image-settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Image Settings'),
+    '#description' => t('Default image settings'),
+    '#collapsible' => FALSE,
+
+    'rokka_use_hash_as_name' => array(
+      '#title' => t('Use Rokka HASH as filename on Rokka.io'),
+      '#description' => t('Output Rokka.io URLs by using the HASH as filename. If not checked, the URI will also include the image filename.'),
+      '#type' => 'checkbox',
+      '#default_value' => variable_get('rokka_use_hash_as_name', TRUE),
+    ),
+
+    'rokka_default_image_format' => array(
+      '#title' => t('Default image format'),
+      '#description' => t('Default image format for rendering images'),
+      '#type' => 'select',
+      '#options' => $formats,
+      '#default_value' => variable_get('rokka_default_image_format', 'jpg'),
+    ),
+  );
   if (!empty($organization)) {
     $form['organization']['display'] = array(
       '#markup' => t('Organization: %displayname', array('%displayname' => $organization->getDisplayName())) . '<br />',

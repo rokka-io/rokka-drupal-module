@@ -18,9 +18,11 @@ function rokka_uninstall() {
     'rokka_api_base_url',
     'rokka_api_key',
     'rokka_api_secret',
+    'rokka_default_image_format',
     'rokka_organization_name',
     'rokka_service_is_enabled',
     'rokka_source_image_style',
+    'rokka_use_hash_as_name',
   );
   foreach($variables as $variable) {
     variable_del($variable);

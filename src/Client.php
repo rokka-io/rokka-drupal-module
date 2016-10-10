@@ -108,4 +108,18 @@ class Client {
     throw new \Exception('Not Implemented');
   }
 
+  /**
+   * Returns an array of accepted formats, keyed by extension.
+   *
+   * @return array
+   */
+  public static function getFileFormats()
+  {
+    return array(
+      'jpg' => 'JPEG Format',
+      'png' => 'PNG Format',
+      'gif' => 'GIF format',
+    );
+  }
+
 }
