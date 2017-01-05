@@ -7,6 +7,7 @@
 define('ROKKA_BASE_ADMIN_MENU_URL', 'admin/config/media/rokka');
 define('ROKKA_SCALE_MAX_WIDTH', 10000);
 define('ROKKA_SCALE_MAX_HEIGHT', 10000);
+define('ROKKA_SCHEME', 'rokka');
 
 /**
  * Implements hook_menu().
@@ -271,8 +272,8 @@ function rokka_image_style_delete($style) {
  * @see Drupal.org issue #1358896
  */
 function rokka_image_style_path_alter(&$result, $style_name, $uri) {
-  $scheme = file_uri_scheme($uri);
-  if ($scheme != 'rokka') {
+  module_load_include('inc', 'rokka');
+  if (!rokka_is_rokka_uri($uri)) {
     return;
   }
 
@@ -295,7 +296,6 @@ function rokka_image_style_path_alter(&$result, $style_name, $uri) {
     $name = preg_replace('@[^a-z0-9-]@', '-', strtolower($info['filename']));
   }
 
-  module_load_include('inc', 'rokka');
   $imageClient = rokka_get_current_client()->getImageClient();
   $styleImageUri = $imageClient->getSourceImageUri($meta->getHash(), $style_name, $format, $name);
   $result = $styleImageUri->__toString();
@@ -310,10 +310,11 @@ function rokka_image_style_path_alter(&$result, $style_name, $uri) {
  * @param array $context
  */
 function rokka_image_style_uri_token_query_alter(&$token_query, $context) {
-  $scheme = file_uri_scheme($context['path']);
-  if ($scheme != 'rokka') {
+  module_load_include('inc', 'rokka');
+  if (!rokka_is_rokka_uri($context['path'])) {
     return;
-  }
+  };
+
   // Avoid putting tokens query to Rokka.io (styles are automatically flushed)
   $token_query = array();
 }
@@ -322,9 +323,10 @@ function rokka_image_style_uri_token_query_alter(&$token_query, $context) {
  * Implements hook_file_presave().
  */
 function rokka_file_presave($file) {
+  module_load_include('inc', 'rokka');
   // Do not bother proceeding if this file is not handled by Rokka.io or if it
   // does not have an image mime type.
-  if (file_uri_scheme($file->uri) !== 'rokka' || file_entity_file_get_mimetype_type($file) != 'image') {
+  if (!rokka_is_rokka_uri($file->uri) || file_entity_file_get_mimetype_type($file) != 'image') {
     return;
   }
 
@@ -362,8 +364,9 @@ function rokka_file_metadata_info() {
  * {@inheritdoc}
  */
 function rokka_file_validate($file) {
-  // Do not bother proceeding if this file is not a Rokka.io uploaded
-  if (file_uri_scheme($file->destination) !== 'rokka') {
+  module_load_include('inc', 'rokka');
+  // Do not bother proceeding if this file is not a Rokka.io uploaded file
+  if (!rokka_is_rokka_uri($file->destination)) {
     return array();
   }
 
@@ -437,13 +440,15 @@ function rokka_entity_info() {
  * Implements hook_focal_point_save().
  */
 function rokka_focal_point_save($element) {
+  module_load_include('inc', 'rokka');
   $fid = $element['fid'];
-  $point = focal_point_parse($element['focal_point']);
-
   $file = file_load($fid);
-  if ('rokka' != file_uri_scheme($file->uri)) {
+
+  if (!$file || !rokka_is_rokka_uri($file->uri)) {
     return;
   }
+
+  $point = focal_point_parse($element['focal_point']);
 
   // Converting the percentage-based points to pixel-based offsets.
   $x = (int) ($file->width * ($point['x-offset'] / 100));

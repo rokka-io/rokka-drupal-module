@@ -1,6 +1,20 @@
 <?php
 
+/**
+ * Check if the given uri represents a Rokka uri or not.
+ *
+ * @param string $uri The URI to check
+ *
+ * @return bool
+ */
+function rokka_is_rokka_uri($uri) {
+  $scheme = file_uri_scheme($uri);
+  if ($scheme === ROKKA_SCHEME) {
+    return TRUE;
+  }
 
+  return FALSE;
+}
 
 
 /**
@@ -30,6 +44,8 @@ function rokka_get_current_client($reset = FALSE) {
 }
 
 /**
+ * Validate Rokka credentials
+ *
  * @return int|null
  *    Returns the HTTP error code associated to the request:
  *      - 200: Ok
