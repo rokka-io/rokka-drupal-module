@@ -125,7 +125,15 @@ class RokkaStreamWrapper extends StreamWrapper implements \DrupalStreamWrapperIn
     // @todo: remove the default style as soon as the getSourceImageUri
     // will support the 'empty' image style to get the original source image
     $defaultStyle = variable_get('rokka_source_image_style', 'rokka_source');
-    $externalUri = self::$imageClient->getSourceImageUri($meta->getHash(), $defaultStyle, 'jpg');
+    $name = null;
+
+    if (!variable_get('rokka_use_hash_as_name', TRUE)) {
+      $filename = pathinfo($meta->getUri(), PATHINFO_FILENAME);
+      $name = \Drupal\rokka\Client::cleanRokkaSeoFileame($filename);
+    }
+
+    $externalUri = self::$imageClient->getSourceImageUri($meta->getHash(), $defaultStyle, 'jpg', $name);
+
     return $externalUri->__toString();
   }
 

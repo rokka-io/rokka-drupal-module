@@ -122,4 +122,17 @@ class Client {
     );
   }
 
+  /**
+   * Returns the SEO compliant filename for the given image name.
+   *
+   * @param $filename
+   * @return string
+   */
+  public static function cleanRokkaSeoFileame($filename)
+  {
+    // Rokka.io accepts SEO URL part as "[a-z0-9-]" only, remove not valid
+    // characters and replace them with '-'
+    return preg_replace('@[^a-z0-9-]@', '-', strtolower($filename));
+  }
+
 }

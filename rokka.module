@@ -289,11 +289,8 @@ function rokka_image_style_path_alter(&$result, $style_name, $uri) {
   $format = variable_get('rokka_default_image_format', 'jpg');
   $name = NULL;
   if (!variable_get('rokka_use_hash_as_name', TRUE)) {
-    $info = pathinfo($meta->getUri());
-
-    // Rokka.io accepts SEO URL part as "[a-z0-9-]" only, remove not valid
-    // characters and replace them with '-'
-    $name = preg_replace('@[^a-z0-9-]@', '-', strtolower($info['filename']));
+    $filename = pathinfo($meta->getUri(), PATHINFO_FILENAME);
+    $name = \Drupal\rokka\Client::cleanRokkaSeoFileame($filename);
   }
 
   $imageClient = rokka_get_current_client()->getImageClient();
