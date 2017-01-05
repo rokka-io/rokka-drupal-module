@@ -1,0 +1,11 @@
+name = Rokka Mass-Mover
+<<<<<<< Updated upstream
+description = Mass move image fields from public/private to Rokka.io
+=======
+description = Mass move images from public/private to Rokka.io
+>>>>>>> Stashed changes
+core = 7.x
+configure = admin/config/media/rokka/mass-mover
+package = Media
+
+dependencies[] = rokka

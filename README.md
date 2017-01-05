@@ -26,7 +26,8 @@ Most module configuration is handled at `admin/config/media/rokka`.
  - Listing of currently available ImageStacks on Rokka with details
  - Image Styles synchronization with Rokka's ImageStacks: image styles are automatically converted and saved to Rokka as
     ImageStacks, most of the image Effects are translated to a compatible Rokka's [Operations](https://rokka.io/documentation/references/operations.html).
-    
+ - Batch move images to Rokka.io from existing fields (install the `rokka_massmover` submodule)
+ 
 ## Third-Party modules integration
  The Rokka module has been successfully tested with the following third-party modules:
  - [FocalPoint](http://www.drupal.org/project/focal_point) module (version 7.x-1.0-beta6)

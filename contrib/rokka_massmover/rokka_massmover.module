@@ -1,0 +1,275 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */
+function rokka_massmover_menu()
+{
+    return array(
+        ROKKA_BASE_ADMIN_MENU_URL.'/mass-mover' => array(
+            'title' => 'Mass-Mover',
+            'description' => 'Rokka Mass-Mover',
+            'type' => MENU_LOCAL_TASK,
+            'access arguments' => array('administer rokka'),
+            'page callback' => 'drupal_get_form',
+            'page arguments' => array('rokka_massmover_admin_settings_form'),
+            'file' => 'rokka_massmover.admin.inc',
+            'weight' => 4,
+        ),
+    );
+}
+
+/**
+ * Update the given Field to use Rokka as the default backend.
+ *
+ * @param string $fieldName The field name to update the configuration
+ *
+ * @return bool Returns TRUE on success, FALSE otherwise
+ */
+function rokka_massmover_set_rokka_default_for_field($fieldName) {
+    $fieldInfo = field_info_field($fieldName);
+
+    if ('image' !== $fieldInfo['type']) {
+        drupal_set_message(t('Field "%fieldName" is not an Image field, can not change its settings to use Rokka.io', array(
+            '%fieldName' => $fieldName,
+        )), 'error');
+
+        return FALSE;
+    }
+
+    // Check if the field is already using Rokka.io as the default scheme, if not set it ro "rokka"
+    if (ROKKA_SCHEME != $fieldInfo['settings']['uri_scheme']) {
+        $fieldInfo['settings']['uri_scheme'] = ROKKA_SCHEME;
+        field_update_field($fieldInfo);
+    }
+
+    drupal_set_message(t('Updated field "%fieldName": using Rokka.io as the default storage.', array(
+        '%fieldName' => $fieldName,
+    )));
+
+    return TRUE;
+}
+
+/**
+ * Returns, for the given field, the Batch operations to move images to Rokka.io.
+ *
+ * @param string $field_name The field name
+ *
+ * @return array The set of Batch operations
+ */
+function rokka_massmover_get_batch_move_field_operations($field_name, $skipFailing = FALSE) {
+    $info = field_info_field($field_name);
+    $operations = array();
+
+    foreach ($info['bundles'] as $contentType => $bundles) {
+        $query = new EntityFieldQuery;
+        $query
+            ->entityCondition('entity_type', $contentType)
+            ->entityCondition('bundle', $bundles)
+            ->fieldCondition($field_name, 'fid', 'NULL', '!=')
+            ->entityOrderBy('entity_id')
+            ->count()
+        ;
+        $count = $query->execute();
+
+        if ($count > 0) {
+            foreach($bundles as $bundle) {
+                $operations[] = array(
+                    'rokka_massmover_batch_move_bundle_type_operation',
+                    array($contentType, $bundle, $field_name, $info['id'], $skipFailing)
+                );
+            }
+        }
+
+    }
+
+    return $operations;
+}
+
+/**
+ * Performs the batch operation.
+ *
+ * @param string $contentType
+ * @param string $bundle
+ * @param string $field_name
+ * @param string $field_id
+ * @param bool $skipFailing
+ * @param array $context
+ *
+ * @throws Exception
+ */
+function rokka_massmover_batch_move_bundle_type_operation($contentType, $bundle, $field_name, $field_id, $skipFailing, &$context) {
+    if (empty($context['sandbox'])) {
+        $context['sandbox'] = array(
+            'progress' => 0,
+            'current_id' => 0,
+            'max' => 0,
+        );
+
+        $query = new EntityFieldQuery;
+        $query->entityCondition('entity_type', $contentType)
+            ->entityCondition('bundle', $bundle)
+            ->fieldCondition($field_name, 'fid', 'NULL', '!=')
+            ->count();
+        $context['sandbox']['max'] = $query->execute();
+    }
+
+    $query = new EntityFieldQuery;
+    $query->entityCondition('entity_type', $contentType)
+        ->entityCondition('entity_id', $context['sandbox']['current_id'], '>')
+        ->entityCondition('bundle', $bundle)
+        ->fieldCondition($field_name, 'fid', 'NULL', '!=')
+        ->entityOrderBy('entity_id')
+        ->range(null, 7)
+    ;
+
+    $results = $query->execute();
+
+    if (!array_key_exists($field_name, $context['results'])) {
+        $context['results'][$field_name] = 0;
+    }
+
+    if (!array_key_exists('_failing', $context['results'])) {
+        $context['results']['_failing'] = 0;
+    }
+
+    if (!array_key_exists($contentType, $results) || !$results[$contentType]) {
+        $context['sandbox']['finished'] = TRUE;
+        return;
+    }
+    $entities = $results[$contentType];
+
+    // Attach a field of selected id only to get value for it
+    field_attach_load($contentType, $entities, FIELD_LOAD_CURRENT, array('field_id' => $field_id));
+
+    // Including helper functions from Rokka module
+    module_load_include('inc', 'rokka');
+
+    foreach ($entities as $entity_id => $loadedEntity) {
+        $field = $loadedEntity->{$field_name};
+
+        $ids = _rokka_massmover_get_field_files($field);
+
+        $context['message'] = t('Processed entities for bundle "%entityType:%bundle" and field "%fieldName" (@progress out of @max)', [
+            '%entityType' => $contentType,
+            '%bundle' => $bundle,
+            '%fieldName' => $field_name,
+            '@progress' => $context['sandbox']['progress'],
+            '@max' => $context['sandbox']['max'],
+        ]);
+
+        // Loop over the list of File IDs
+        foreach ($ids as $fid) {
+            try {
+                rokka_massmover_move_file($fid);
+                // Sum up the number or files moved to Rokka
+                $context['results'][$field_name]++;
+            } catch (\Exception $e) {
+                if (!$skipFailing) {
+                    throw $e;
+                }
+                watchdog('rokka-massmover', 'Exception while moving image file !link to Rokka.io, image skipped. @error', array(
+                    '!link' => l($fid, 'file/'.$fid),
+                    '@error' => $e->getMessage(),
+                ), WATCHDOG_WARNING);
+
+                $context['results']['_failing']++;
+            }
+        }
+        $context['sandbox']['current_id'] = $entity_id;
+        $context['sandbox']['progress']++;
+    }
+
+    // Inform the batch engine that we are not finished,
+    // and provide an estimation of the completion level we reached.
+    if ($context['sandbox']['progress'] != $context['sandbox']['max']) {
+        $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
+    }
+
+}
+
+/**
+ * Returns the list of file IDs for the given field
+ *
+ * @param array $field The image field
+ *
+ * @return array The list of FIDs for the given field
+ */
+function _rokka_massmover_get_field_files($field) {
+    $ids = array();
+
+    if (!is_array($field)) {
+        return $ids;
+    }
+
+    // Looping into the languages defined
+    foreach ($field as $lang => $fieldValues) {
+        foreach ($fieldValues as $imageData) {
+            if (!rokka_is_rokka_uri($imageData['uri'])) {
+                $ids[] = $imageData['fid'];
+            }
+        }
+    }
+    return $ids;
+}
+
+/**
+ * Move the given file (by its FID) to Rokka.
+ *
+ * @param int $fid The file's FID
+ *
+ * @return bool
+ */
+function rokka_massmover_move_file($fid) {
+    $file = file_load($fid);
+    if (rokka_is_rokka_uri($file->uri)) {
+        return TRUE;
+    }
+
+    $schema = file_uri_scheme($file->uri);
+    $targetUri = ROKKA_SCHEME.'://' . str_replace($schema.'://', '', $file->uri);
+
+    file_move($file, $targetUri);
+}
+
+/**
+ * Batch 'finished' callback used by both batch 1 and batch 2.
+ */
+function rokka_massmover_batch_finished($success, $results, $operations) {
+    if ($success) {
+        if (!empty($results['_failing'])) {
+            drupal_set_message(t('Skipped @count failed uploads to Rokka.io. Check your logs for further details.', array(
+                '@count' => $results['_failing'],
+            )), 'warning');
+        }
+        unset($results['_failing']);
+
+        // Display the summary of images moved to Rokka.io
+        foreach ($results as $fieldName => $count) {
+            if (0 == $count) {
+                drupal_set_message(t('No images have been moved to Rokka.io for "%fieldName" field: either no images have been found, or all images are already on Rokka.io.', array(
+                    '%fieldName' => $fieldName,
+                )));
+            }
+            else {
+                drupal_set_message(t('@count images have been moved to Rokka.io for "%fieldName" field.', [
+                    '@count' => $count,
+                    '%fieldName' => $fieldName,
+                ]));
+            }
+        }
+    }
+    else {
+        // An error occurred.
+        $error_operation = reset($operations);
+        drupal_set_message(
+            t('An error occurred while processing @operation with arguments : @args',
+              array(
+                  '@operation' => $error_operation[0],
+                  '@args' => print_r($error_operation[0], TRUE),
+              )
+            ),
+            'error'
+        );
+    }
+}
