@@ -8,7 +8,7 @@ class EffectRokkaTrim implements InterfaceEffectImage {
 
   public static function buildRokkaStackOperation($data) {
     $options = array(
-      'fuzzy' => ''. static::normalizePercent($data['fuzzy']),
+      'fuzzy' => static::normalizePercent($data['fuzzy']),
     );
     return array(new StackOperation('trim', $options));
   }

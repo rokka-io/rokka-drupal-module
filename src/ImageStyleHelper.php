@@ -8,6 +8,15 @@ use Rokka\Client\Core\StackOperation;
 class ImageStyleHelper {
 
   /**
+   * @param $value
+   * @return mixed
+   */
+  public static function operationNormalizeSize($value) {
+    $value = $value ? $value : PHP_INT_MAX;
+    return min(10000, max(1, $value));
+  }
+
+  /**
    * @param array $effects
    * @return StackOperation[]
    */
@@ -21,17 +30,18 @@ class ImageStyleHelper {
 
     $operations = array();
     $currentId = 0;
-    foreach($effects as $effect) {
+    foreach ($effects as $effect) {
       $ops = static::buildStackOperation($effect);
       if (!empty($ops)) {
-        foreach($ops as $op) {
+        foreach ($ops as $op) {
           $operations[$currentId++] = $op;
         }
       }
     }
 
-    if (empty($operations))
+    if (empty($operations)) {
       return NULL;
+    }
 
     ksort($operations);
     return $operations;
@@ -49,11 +59,10 @@ class ImageStyleHelper {
     if (class_exists($className) && in_array('Drupal\rokka\StyleEffects\InterfaceEffectImage', class_implements($className))) {
       /** @var InterfaceEffectImage $className */
       $ret = $className::buildRokkaStackOperation($effect['data']);
-    }
-    else {
+    } else {
       watchdog('rokka', 'Can not convert effect "%effect" to Rokka.io StackOperation: "%class" Class missing!', array(
         '%effect' => $name,
-        '%class'  => $className,
+        '%class' => $className,
       ));
     }
 
