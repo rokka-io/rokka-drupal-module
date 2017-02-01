@@ -129,7 +129,7 @@ class RokkaStreamWrapper extends StreamWrapper implements \DrupalStreamWrapperIn
 
     if (!variable_get('rokka_use_hash_as_name', TRUE)) {
       $filename = pathinfo($meta->getUri(), PATHINFO_FILENAME);
-      $name = \Drupal\rokka\Client::cleanRokkaSeoFileame($filename);
+      $name = \Drupal\rokka\Client::cleanRokkaSeoFilename($filename);
     }
 
     $externalUri = self::$imageClient->getSourceImageUri($meta->getHash(), $defaultStyle, 'jpg', $name);

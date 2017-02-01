@@ -128,7 +128,7 @@ class Client {
    * @param $filename
    * @return string
    */
-  public static function cleanRokkaSeoFileame($filename)
+  public static function cleanRokkaSeoFilename($filename)
   {
     // Rokka.io accepts SEO URL part as "[a-z0-9-]" only, remove not valid
     // characters and replace them with '-'
