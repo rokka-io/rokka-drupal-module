@@ -8,9 +8,11 @@ class EffectImageScale extends EffectImageResize {
 
   public static function buildRokkaStackOperation($data) {
     $options = array(
+      'upscale' => boolval($data['upscale']),
       'height' => ''. static::normalizeSize($data['height']),
-      'width'  => ''. static::normalizeSize($data['width']),
+      'width' => ''. static::normalizeSize($data['width']),
     );
+
     return array(new StackOperation('resize', $options));
   }
 }
