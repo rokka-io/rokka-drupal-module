@@ -6,7 +6,12 @@ This module integrates [Rokka.io](https://rokka.io) with Drupal: after setting u
  - Synchronize Drupal's Image Styles to Rokka's ImageStacks
  - Display images from Rokka service
 
-## Setup
+## Install and Setup
+Due to a hitch in the dependency resolution from the modules, the "composer_manager" module must be installed first, and only later the "rokka" module.
+
+ - `drush en composer_manager -y`
+ - `drush en rokka -y`
+
 Most module configuration is handled at `admin/config/media/rokka`.
  
 ### Patches for full functionality
