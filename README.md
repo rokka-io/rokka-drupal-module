@@ -20,7 +20,7 @@ Most module configuration is handled at `admin/config/media/rokka`.
  - Image styles URIs QueryTokens: [hook_image_style_uri_token_query_alter](https://www.drupal.org/node/2610308) needs to
     be patched in Drupal's image.module to avoid CDN issues with Rokka.
 
-## Available Features
+## Features
  - Rokka access credentials configuration and validation
  - Listing of currently available SourceImages on Rokka
  - Listing of currently available ImageStacks on Rokka with details
@@ -38,6 +38,19 @@ Please install the `rokka_effects` submodule.
  - [Media](http://www.drupal.org/project/media) module
  - [Picture](http://www.drupal.org/project/picture) module (version 7.x-2.x-dev, after issue [#2610318](https://www.drupal.org/node/2610318) got merged)
 
+## Image Effects support:
+This is a preliminary list of image effects supported by Rokka and the Rokka module:
+
+ - Core Drupal "Crop"
+ - Core Drupal "Resize"
+ - Core Drupal "Rotate"
+ - Core Drupal "Scale"
+ - Core Drupal "ScaleAndCrop"
+ - Focal_Point: "Crop"
+
 ## ToDo(s)
+ - Integrate effects from:
+   - https://www.drupal.org/project/imagecache_actions
+   - https://www.drupal.org/project/filtersie
  - Replace SourceImage list with a View
  - Include a link to the account usage-plan details on Rokka.io
