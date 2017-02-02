@@ -83,8 +83,7 @@ function rokka_crud_imagestack_create(\Drupal\rokka\RokkaStack $rokkaStackEntity
           '%style' => $name,
         )), 'warning');
         return $stack;
-      }
-      else {
+      } else {
         watchdog('rokka', 'Image style "%imagestyle" uploaded to Rokka.io"', array('%imagestyle' => $name));
         drupal_set_message(t('The style "!imagestyle" has been successfully saved to Rokka.', array(
           '!imagestyle' => l($name, ROKKA_BASE_ADMIN_MENU_URL . '/imagestack/' . $name)
@@ -92,9 +91,13 @@ function rokka_crud_imagestack_create(\Drupal\rokka\RokkaStack $rokkaStackEntity
         return TRUE;
       }
     } catch (\Exception $e) {
+      $errorMessage = $e->getMessage();
+      if ($e instanceof GuzzleHttp\Exception\ClientException) {
+        $errorMessage = !$e->getResponse() ?: $e->getResponse()->getBody()->getContents();
+      }
       watchdog('rokka', 'Exception while saving ImageStack in "%function": error: "%error"', array(
         '%function' => __FUNCTION__,
-        '%error' => $e->getMessage(),
+        '%error' => $errorMessage,
       ));
       drupal_set_message(t('Error while saving the image style "!imagestyle" to Rokka.io, please contact your site administrator.', array(
         '!imagestyle' => l($name, ROKKA_BASE_ADMIN_MENU_URL . '/imagestack/' . $name)
