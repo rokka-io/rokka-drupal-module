@@ -28,6 +28,10 @@ Most module configuration is handled at `admin/config/media/rokka`.
     ImageStacks, most of the image Effects are translated to a compatible Rokka's [Operations](https://rokka.io/documentation/references/operations.html).
  - Batch move images to Rokka.io from existing fields (install the `rokka_massmover` submodule)
  
+## Additional Rokka-only Image Effects
+Please install the `rokka_effects` submodule.
+  - Crop with Background: allow images to be cropped with a bigger size than the original image, configurable background color and transparency
+
 ## Third-Party modules integration
  The Rokka module has been successfully tested with the following third-party modules:
  - [FocalPoint](http://www.drupal.org/project/focal_point) module (version 7.x-1.0-beta6)

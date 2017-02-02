@@ -1,0 +1,6 @@
+name = Rokka Effects
+description = Expose additional Rokka operations as Drupal image-effects
+core = 7.x
+package = Media
+
+dependencies[] = rokka
