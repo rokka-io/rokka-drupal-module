@@ -8,6 +8,27 @@ use Rokka\Client\Core\StackOperation;
 class ImageStyleHelper {
 
   /**
+   * Returns the Angle value in [0-360] interval.
+   * @param $angle
+   * @return int
+   */
+  public static function operationNormalizeAngle($angle) {
+    $angle = $angle % 360;
+    if ($angle < 0) {
+      $angle = 360 + $angle;
+    }
+    return $angle;
+  }
+
+  /**
+   * @param $value
+   * @return mixed
+   */
+  public static function operationNormalizeColor($value) {
+    return str_replace('#', '', $value);
+  }
+
+  /**
    * @param $value
    * @return mixed
    */
