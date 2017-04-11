@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [Unreleased]
 ### Added
+### Changed
+### Remvoved
+### Fixed
+
+## [7.x-1.1-rc3](https://www.drupal.org/project/rokka/releases/7.x-1.1-rc3)
+### Added
 - [#2819345](https://www.drupal.org/node/2819345) by thePanz: Added support for Blur effect from Rokka.io
 - Added Changelog (this file)
 ### Changed
@@ -13,7 +19,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Removed
 ### Fixed
 - Fix warning on Image effects: the "override" action is not set when creating a new stack
-### Security
 
 ## [7.x-1.1-rc2](https://www.drupal.org/project/rokka/releases/7.x-1.1-rc2)
 ### Added
