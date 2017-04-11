@@ -25,13 +25,4 @@ class EffectRokkaCrop implements InterfaceEffectImage {
       new StackOperation('composition', $composite_options),
     );
   }
-
-  /**
-   * @param $value
-   * @return mixed
-   */
-  protected static function normalizeSize($value) {
-    $value = $value ? $value : PHP_INT_MAX;
-    return min(10000, max(1, $value));
-  }
 }

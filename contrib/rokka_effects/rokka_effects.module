@@ -8,7 +8,7 @@ function rokka_effects_image_effect_info() {
     'rokka_crop' => array(
       'label' => t('Rokka: Crop with background (*Rokka.io Only*)'),
       'help' => t('Cropping will remove portions of an image to make it the specified dimensions. Overcropping will increase the image size with a background.'),
-      'effect callback' => 'image_crop_effect',
+      'effect callback' => 'rokka_effects_none',
       'dimensions callback' => 'image_resize_dimensions',
       'form callback' => 'rokka_effects_crop_form',
       'summary theme' => 'rokka_effects_crop_summary',

@@ -96,6 +96,7 @@ function rokka_admin_imagestack_item(Stack $stack) {
 
   $header = array('option', 'value');
   $rows = array();
+
   foreach($stack->getStackOptions() as $option => $value) {
     $rows[] = array(
       $option,
@@ -105,9 +106,8 @@ function rokka_admin_imagestack_item(Stack $stack) {
   $output = theme('table', array(
     'header' => $header,
     'rows'   => $rows,
-    'empty'  => t('No Operations found on Rokka.io service for this ImageStack.'),
+    'empty'  => t('No Stack-Options found on Rokka.io service for this ImageStack.'),
   ));
-
 
   $header = array('operation', 'options');
   $rows = array();
