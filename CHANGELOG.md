@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - Updated RokkaClient requirements to v0.5.*
 ### Removed
 ### Fixed
+- Fix warning on Image effects: the "override" action is not set when creating a new stack
 ### Security
 
 ## [7.x-1.1-rc2](https://www.drupal.org/project/rokka/releases/7.x-1.1-rc2)
