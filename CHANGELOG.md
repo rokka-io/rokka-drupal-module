@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Added
 - Added Changelog (this file)
 ### Changed
+- Updated Organization display details
 - Updated RokkaClient requirements to v0.5.*
 ### Removed
 ### Fixed

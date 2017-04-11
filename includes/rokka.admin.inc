@@ -97,13 +97,13 @@ function rokka_admin_settings_form($form, $form_state) {
   );
   if (!empty($organization)) {
     $form['organization']['display'] = array(
-      '#markup' => t('Organization: %displayname', array('%displayname' => $organization->getDisplayName())) . '<br />',
+      '#markup' => t('Name: %displayname', array('%displayname' => $organization->getDisplayName())) . '<br />',
     );
     $form['organization']['id'] = array(
-      '#markup' => t('Organization id: %id', array('%id' => $organization->getId())) . '<br />',
+      '#markup' => t('ID: %id', array('%id' => $organization->getId())) . '<br />',
     );
     $form['organization']['billing'] = array(
-      '#markup' => t('Organization email: %email', array('%email' => $organization->getBillingEmail())) . '<br />',
+      '#markup' => t('Billing email: %email', array('%email' => $organization->getBillingEmail())) . '<br />',
     );
   }
 
