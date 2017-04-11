@@ -7,7 +7,8 @@ This module integrates [Rokka.io](https://rokka.io) with Drupal: after setting u
  - Display images from Rokka service
 
 ## Install and Setup
-Due to a hitch in the dependency resolution from the modules, the "composer_manager" module must be installed first, and only later the "rokka" module.
+Due to a hitch in the dependency resolution from the modules, the "composer_manager" module
+must be installed first, and only later the "rokka" module.
 
  - `drush en composer_manager -y`
  - `drush en rokka -y`
@@ -29,13 +30,14 @@ Most module configuration is handled at `admin/config/media/rokka`.
  - Rokka access credentials configuration and validation
  - Listing of currently available SourceImages on Rokka
  - Listing of currently available ImageStacks on Rokka with details
- - Image Styles synchronization with Rokka's ImageStacks: image styles are automatically converted and saved to Rokka as
-    ImageStacks, most of the image Effects are translated to a compatible Rokka's [Operations](https://rokka.io/documentation/references/operations.html).
+ - Map Drupal image-effects to Rokka: image styles are automatically converted and saved to Rokka
  - Batch move images to Rokka.io from existing fields (install the `rokka_massmover` submodule)
+ - Expose Rokka.io Operations as Drupal image-effects (install the `rokka_effects` submodule)
  
 ## Additional Rokka-only Image Effects
 Please install the `rokka_effects` submodule.
-  - Crop with Background: allow images to be cropped with a bigger size than the original image, configurable background color and transparency
+  - *Crop with Background*: allow images to be cropped with a bigger size than the original image, configurable background color and transparency
+  - *Blur*: apply blur effect to the image (un-sharpening)  
 
 ## Third-Party modules integration
  The Rokka module has been successfully tested with the following third-party modules:
@@ -58,4 +60,3 @@ This is a preliminary list of image effects supported by Rokka and the Rokka mod
    - https://www.drupal.org/project/imagecache_actions
    - https://www.drupal.org/project/filtersie
  - Replace SourceImage list with a View
- - Include a link to the account usage-plan details on Rokka.io
