@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [Unreleased]
 ### Added
+- [#2819345](https://www.drupal.org/node/2819345) by thePanz: Added support for Blur effect from Rokka.io
 - Added Changelog (this file)
 ### Changed
 - Updated Organization display details

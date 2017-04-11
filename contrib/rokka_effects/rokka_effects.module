@@ -13,6 +13,14 @@ function rokka_effects_image_effect_info() {
       'form callback' => 'rokka_effects_crop_form',
       'summary theme' => 'rokka_effects_crop_summary',
     ),
+    'rokka_blur' => array(
+      'label' => t('Rokka: Blur (*Rokka.io Only*)'),
+      'help' => t('Apply a blur filter to the image'),
+      'effect callback' => 'rokka_effects_none',
+      'dimensions passthrough' => true,
+      'form callback' => 'rokka_effects_blur_form',
+      'summary theme' => 'rokka_effects_blur_summary',
+    ),
   );
 }
 
@@ -24,11 +32,85 @@ function rokka_effects_theme() {
     'rokka_effects_crop_summary' => array(
       'variables' => array('data' => NULL),
     ),
+    'rokka_effects_blur_summary' => array(
+      'variables' => array('data' => NULL),
+    ),
   );
 }
 
 /**
- * Form structure for the image crop form.
+ * Image effect callback; do not alter the image.
+ *
+ * @param $image
+ *      An image object returned by image_load().
+ * @param $data
+*    Ignored, as the computation will be done by Rokka.io
+ *
+ * @return bool
+ *   TRUE always
+ */
+function rokka_effects_none(&$image, $data) {
+  return true;
+}
+
+
+/**
+ * Form structure for the image blur form.
+ *
+ * Note that this is not a complete form, it only contains the portion of the
+ * form for configuring the blur options. Therefore it does not not need to
+ * include metadata about the effect, nor a submit button.
+ *
+ * @param $data
+ *   The current configuration for this blur effect.
+ *
+ * @return array
+ */
+function rokka_effects_blur_form($data) {
+
+  $form['radius'] = array(
+    '#type' => 'textfield',
+    '#default_value' => isset($data['radius']) ? $data['radius'] : 5,
+    '#title' => t('Radius Value'),
+    '#description' => t('Blur Radius value, between 0 and 25, default: 5.'),
+    '#required' => TRUE,
+    '#maxlength' => 4,
+    '#element_validate' => array('rokka_effects_integer_validate'),
+    '#max_int_value' => 25,
+  );
+
+  $form['sigma'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Sigma value'),
+    '#description' => t('Blur Sigma value, between 0 and 25, default: 5.'),
+    '#default_value' => isset($data['sigma']) ? $data['sigma'] : 5,
+    '#element_validate' => array('rokka_effects_integer_validate'),
+    '#required' => TRUE,
+    '#maxlength' => 4,
+    '#max_int_value' => 25,
+  );
+
+  return $form;
+}
+
+/**
+ * Returns HTML for a summary of an Rokka Blur effect.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - data: The current configuration for this resize effect.
+ *
+ * @return string
+ */
+function theme_rokka_effects_blur_summary($variables) {
+  $data = $variables['data'];
+
+  return 'Radius: '.check_plain($data['radius']) . ' Sigma: ' . check_plain($data['sigma']);
+}
+
+
+/**
+ * Form structure for the Rokka Crop form.
  *
  * Note that this is not a complete form, it only contains the portion of the
  * form for configuring the crop options. Therefore it does not not need to
@@ -65,7 +147,7 @@ function rokka_effects_crop_form($data) {
 }
 
 /**
- * Returns HTML for a summary of an image resize effect.
+ * Returns HTML for a summary of an Rokka Crop effect.
  *
  * @param $variables
  *   An associative array containing:
@@ -91,5 +173,24 @@ function rokka_effects_opacity_validate($element, &$form_state) {
   $value = $element['#value'];
   if ($value != '' && (!is_numeric($value) || intval($value) < 0)) {
     form_error($element, t('!name must be a positive integer.', array('!name' => $element['#title'])));
+  }
+}
+
+/**
+ * Element validate handler to ensure an integer value value.
+ */
+function rokka_effects_integer_validate($element, &$form_state) {
+  $value = $element['#value'];
+  $max_value = !empty($element['#max_int_value']) ? $element['#max_int_value'] : null;
+
+  if ($value != '' && (!is_numeric($value) || intval($value) < 0)) {
+      form_error($element, t('!name must be a positive integer.', array('!name' => $element['#title'])));
+  }
+
+  if ($max_value && (int) $value > (int) $max_value) {
+    form_error($element, t('!name must be a positive integer, less or equal than !max-value.', array(
+      '!name' => $element['#title'],
+      '!max-value' => $max_value,
+    )));
   }
 }
