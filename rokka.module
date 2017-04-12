@@ -447,9 +447,9 @@ function rokka_focal_point_save($element) {
 
   $point = focal_point_parse($element['focal_point']);
 
-  // Converting the percentage-based points to pixel-based offsets.
-  $x = (int) ($file->width * ($point['x-offset'] / 100));
-  $y = (int) ($file->height * ($point['y-offset'] / 100));
+  // Converting the percentage-based points to pixel-based offsets, ensure non negative values.
+  $x = max(0, (int) ($file->width * ($point['x-offset'] / 100)));
+  $y = max(0, (int) ($file->height * ($point['y-offset'] / 100)));
 
   $client = rokka_get_current_client();
   $imageClient = $client->getImageClient();

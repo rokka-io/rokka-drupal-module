@@ -6,8 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ## [Unreleased]
 ### Added
 ### Changed
-### Remvoved
+- Updated RokkaClient requirements to v0.6.*
+### Removed
 ### Fixed
+- Fixed FocalPoint handling, ensure non-negative point
 
 ## [7.x-1.1-rc3](https://www.drupal.org/project/rokka/releases/7.x-1.1-rc3)
 ### Added
