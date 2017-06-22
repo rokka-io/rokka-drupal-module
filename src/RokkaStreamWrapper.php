@@ -30,11 +30,18 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
      * @param RokkaServiceInterface $rokkaService
      * @param LoggerInterface       $logger
      */
-  public function __construct(RokkaServiceInterface $rokkaService, LoggerInterface $logger)
+  public function __construct(RokkaServiceInterface $rokkaService = null, LoggerInterface $logger = null)
   {
-      parent::__construct($rokkaService->getRokkaImageClient());
-      $this->logger = $logger;
-      $this->rokkaService = $rokkaService;
+      // @todo: looks like Drupal is sometimes buillding this stream wrapper with no parameter,
+      //        We hard code the required services here!
+      //        It is failing when Saving an image effect of an Image style (WTF!!!)
+      $this->logger = $logger ?: \Drupal::service('rokka.logger');
+      $this->rokkaService = $rokkaService ?: \Drupal::service('rokka.service');
+
+      if (null == $rokkaService) {
+          $this->logger->error(__CLASS__.' Invoked with null service (this should be an error!)');
+      }
+      parent::__construct($this->rokkaService->getRokkaImageClient());
   }
 
   /**
@@ -118,8 +125,8 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
         $meta = $this->rokkaService->loadRokkaMetadataByUri($this->uri);
 
         if (!($meta instanceof RokkaMetadata)) {
-            $this->logger->critical('Error getting getExternalUrl() for "@uri": RokkaMetadata not found!', [
-                '@uri' => $this->uri,
+            $this->logger->critical('Error getting getExternalUrl() for "{uri}": RokkaMetadata not found!', [
+                'uri' => $this->uri,
             ]);
 
             return null;
@@ -345,9 +352,10 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
       $meta = $this->doGetMetadataFromUri($uri);
       if ($meta) {
           $data = [
-        'timestamp' => $meta->getCreatedTime(),
-        'filesize'  => $meta->getFilesize(),
-      ];
+              'timestamp' => $meta->getCreatedTime(),
+              'filesize' => $meta->getFilesize(),
+          ];
+
           return $this->formatUrlStat($data);
       }
 
@@ -406,26 +414,28 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    */
   public function mkdir($uri, $mode, $options)
   {
-      // Returns TRUE only if we try to create a folder.
-    return $this->is_dir($uri);
+      return true;
   }
 
-  /**
-   * @param string $uri
-   * @return bool
-   */
-  protected function is_dir($uri)
-  {
-      list($scheme, $target) = explode('://', $uri, 2);
+    /**
+     * @param string $uri
+     *
+     * @return bool
+     */
+    protected function is_dir($uri)
+    {
+        list($scheme, $target) = explode('://', $uri, 2);
 
-    // Check if it's the root directory.
-    if (empty($target)) {
-        return true;
+        // Check if it's the root directory.
+        if (empty($target)) {
+            return true;
+        }
+        $this->logger->critical(__CLASS__.'::'.__FUNCTION__.' @'.__LINE__);
+        $this->logger->critical(__CLASS__.'::'.__FUNCTION__.' '.$uri);
+
+        // If not, check if the URI ends with '/' (eg: rokka://foldername/")
+        return strrpos($target, '/') === (strlen($target) - 1);
     }
-
-    // If not, check if the URI ends with '/' (eg: rokka://foldername/")
-    return strrpos($target, '/') === (strlen($target) -1);
-  }
 
   /**
    * Rokka.io has no support for rmdir().
