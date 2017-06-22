@@ -1,6 +1,6 @@
 {
     "name": "drupal/rokka",
-    "type": "module",
+    "type": "drupal-module",
     "description": "Provides Rokka.io integration with Drupal's stream wrapper.",
     "homepage": "https://drupal.org/projects/rokka",
     "license": "GPL-2.0",
