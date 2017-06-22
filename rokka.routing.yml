@@ -5,3 +5,7 @@ rokka.admin_settings:
     _title: 'Rokka settings'
   requirements:
     _permission: 'Administer Rokka'
+
+
+route_callbacks:
+  - '\Drupal\rokka\Routing\RokkaImageStyleRoutes::routes'

@@ -9,7 +9,8 @@ services:
     class: Drupal\rokka\RokkaService
     arguments:
       - '@entity_type.manager'
-      # Add other parameters from the Rokka configuration?
+      - '@config.factory'
+      - '@rokka.logger'
 
   rokka.stream_wrapper:
     class: Drupal\rokka\RokkaStreamWrapper
@@ -19,7 +20,7 @@ services:
     tags:
       - { name: stream_wrapper, scheme: rokka }
 
-  #rokka.path_processor.image_styles:
-  #  class: "Drupal\rokka\PathProcessor\RokkaPathProcessorImageStyles"
-  #  tags:
-  #    - { name: path_processor_inbound, priority: 310 }
+  rokka.path_processor.image_styles:
+    class: Drupal\rokka\PathProcessor\RokkaPathProcessorImageStyles
+    tags:
+      - { name: path_processor_inbound, priority: 310 }

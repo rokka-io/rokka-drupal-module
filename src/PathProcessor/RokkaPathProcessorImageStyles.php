@@ -19,21 +19,18 @@ use Symfony\Component\HttpFoundation\Request;
  *
  * Private files use the normal private file workflow.
  *
+ * @see \Drupal\rokka\Controller\S3fsImageStyleDownloadController::deliver()
  * @see \Drupal\image\Controller\ImageStyleDownloadController::deliver()
  * @see \Drupal\image\PathProcessor\PathProcessorImageStyles::processInbound()
  */
+class RokkaPathProcessorImageStyles implements InboundPathProcessorInterface {
 
-class RokkaPathProcessorImageStyles implements InboundPathProcessorInterface
-{
+    const IMAGE_STYLE_PATH_PREFIX = '/rokka/files/styles/';
 
     /**
      * {@inheritdoc}
      */
-    public function processInbound($path, Request $request)
-    {
-        var_dump($path);
-
-        /*
+    public function processInbound($path, Request $request) {
         if ($this->isImageStylePath($path)) {
             // Strip out path prefix.
             $rest = preg_replace('|^' . preg_quote(static::IMAGE_STYLE_PATH_PREFIX, '|') . '|', '', $path);
@@ -49,7 +46,6 @@ class RokkaPathProcessorImageStyles implements InboundPathProcessorInterface
                 }
             }
         }
-        */
 
         return $path;
     }
@@ -60,9 +56,8 @@ class RokkaPathProcessorImageStyles implements InboundPathProcessorInterface
      * @param $path
      * @return bool
      */
-    private function isImageStylePath($path)
-    {
-        var_dump($path);
+    private function isImageStylePath($path) {
+        return strpos($path, static::IMAGE_STYLE_PATH_PREFIX) === 0;
     }
 
     /**
