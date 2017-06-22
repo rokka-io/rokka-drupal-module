@@ -25,16 +25,14 @@ class RokkaSettingsForm extends ConfigFormBase {
   }
 
   public function buildForm(array $form, FormStateInterface $form_state) {
-//    $form = parent::buildForm($form, $form_state);
-
     $config = $this->config('rokka.settings');
 
     $form = array(
-      'rokka_service_is_enabled' => array(
+      'is_enabled' => array(
         '#title' => $this->t('Enable Rokka.io service'),
         '#description' => $this->t('Enable or disable the Rokka.io integration'),
         '#type' => 'checkbox',
-        '#default_value' => $config->get('rokka_service_is_enabled'),
+        '#default_value' => $config->get('is_enabled'),
       ),
       'credentials' => array(
         '#type' => 'fieldset',
@@ -63,12 +61,12 @@ class RokkaSettingsForm extends ConfigFormBase {
         '#description' => $this->t('Enter the Organization at Rokka.io'),
         '#collapsible' => FALSE,
 
-        'rokka_organization_name' => array(
+        'organization_name' => array(
           '#title' => $this->t('Organization Name'),
           '#description' => $this->t('The Organization Name given from the Rokka.io service'),
           '#type' => 'textfield',
           '#required' => TRUE,
-          '#default_value' => $config->get('rokka_organization_name'),
+          '#default_value' => $config->get('organization_name'),
         )
       ),
     );
@@ -82,12 +80,13 @@ class RokkaSettingsForm extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
     $values = $form_state->getValues();
-    $this->config('rokka.settings')
-      ->set('rokka_service_is_enabled', $values['rokka_service_is_enabled'])
-      ->set('rokka_api_key', $values['rokka_api_key'])
-      ->set('rokka_api_secret', $values['rokka_api_secret'])
-      ->set('rokka_organization_name', $values['rokka_organization_name'])
-      ->save();
+    $config = $this->config('rokka.settings');
+
+    $config->set('is_enabled', $values['is_enabled']);
+    $config->set('rokka_api_key', $values['rokka_api_key']);
+    $config->set('rokka_api_secret', $values['rokka_api_secret']);
+    $config->set('organization_name', $values['organization_name']);
+    $config->save();
 
     parent::submitForm($form, $form_state);
   }

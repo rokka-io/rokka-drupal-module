@@ -1,5 +1,4 @@
 rokka_api_key: ''
-is_enabled: FALSE
-rokka_api_key: ''
 rokka_secret_key: ''
+is_enabled: FALSE
 organization_name: ''
