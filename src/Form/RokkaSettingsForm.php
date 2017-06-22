@@ -47,13 +47,6 @@ class RokkaSettingsForm extends ConfigFormBase {
           '#required' => TRUE,
           '#default_value' => $config->get('rokka_api_key'),
         ),
-        'rokka_api_secret' => array(
-          '#title' => $this->t('API Secret'),
-          '#description' => $this->t('The API Secret credential provided by the Rokka.io service'),
-          '#type' => 'textfield',
-          '#required' => TRUE,
-          '#default_value' => $config->get('rokka_api_secret'),
-        ),
       ),
       'organization' => array(
         '#type' => 'fieldset',
@@ -84,7 +77,6 @@ class RokkaSettingsForm extends ConfigFormBase {
 
     $config->set('is_enabled', $values['is_enabled']);
     $config->set('rokka_api_key', $values['rokka_api_key']);
-    $config->set('rokka_api_secret', $values['rokka_api_secret']);
     $config->set('organization_name', $values['organization_name']);
     $config->save();
 
