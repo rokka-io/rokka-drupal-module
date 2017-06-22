@@ -1,0 +1,25 @@
+{
+    "name": "drupal/rokka",
+    "type": "module",
+    "description": "Provides Rokka.io integration with Drupal's stream wrapper.",
+    "homepage": "https://drupal.org/projects/rokka",
+    "license": "GPL-2.0",
+    "keywords": [
+        "rokka.io"
+    ],
+    "authors": [
+        {
+            "name": "Emanuele Panzeri",
+            "email": "thepanz@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.5.0 || 7.0",
+        "rokka/client": "^0.7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Drupal\\rokka\\": "src/"
+        }
+    }
+}

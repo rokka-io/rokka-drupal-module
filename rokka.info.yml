@@ -1,6 +1,6 @@
 name: Rokka
 type: module
-description: Say Hello World
+description: Provides Rokka.io integration with Drupal's file system.
 package: Media
 core: 8.x
 configure: rokka.admin_settings

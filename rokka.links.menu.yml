@@ -1,4 +1,4 @@
-s3fs.admin_settings:
+rokka.admin_settings:
   title: 'Rokka'
   description: 'Configure Rokka.io settings.'
   route_name: rokka.admin_settings
