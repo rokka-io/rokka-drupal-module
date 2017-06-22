@@ -5,7 +5,8 @@ namespace Drupal\rokka;
 /**
  * Rokka service interface.
  */
-interface RokkaServiceInterface {
+interface RokkaServiceInterface
+{
 
   /**
    * Validate the Rokka config.
@@ -17,7 +18,7 @@ interface RokkaServiceInterface {
    *
    * @return Boolean/array
    */
-  function validate(array $config, $returnError = FALSE);
+  public function validate(array $config, $returnError = false);
 
   /**
    * Sets up the S3Client object.
@@ -30,7 +31,7 @@ interface RokkaServiceInterface {
    *
    * @throws \Drupal\Rokka\RokkaException
    */
-  function getAmazonS3Client($config);
+  public function getAmazonS3Client($config);
 
   /**
    * Copies all the local files from the specified file system into S3.
@@ -40,7 +41,7 @@ interface RokkaServiceInterface {
    * @param $scheme
    *   A variable defining which scheme (Public or Private) to copy.
    */
-  function copyFileSystemToS3($config, $scheme);
+  public function copyFileSystemToS3($config, $scheme);
 
   /**
    * Scans a given directory.
@@ -51,7 +52,7 @@ interface RokkaServiceInterface {
    * @return array
    *   Array of file paths.
    */
-  function dirScan($dir);
+  public function dirScan($dir);
 
   /**
    * Refreshes the metadata cache.
@@ -66,7 +67,7 @@ interface RokkaServiceInterface {
    * @param array $config
    *   An Rokka configuration array.
    */
-  function refreshCache($config);
+  public function refreshCache($config);
 
   /**
    * Convert file metadata returned from S3 into a metadata cache array.
@@ -81,6 +82,5 @@ interface RokkaServiceInterface {
    * @return array
    *   A file metadata cache array.
    */
-  function convertMetadata($uri, $s3_metadata);
-
+  public function convertMetadata($uri, $s3_metadata);
 }
