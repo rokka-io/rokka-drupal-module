@@ -10,6 +10,19 @@ use Drupal\rokka\RokkaAdapter\SourceImageMetadata;
 interface RokkaServiceInterface
 {
     /**
+     * Return the given setting from the Rokka module configuration.
+     *
+     * Examples:
+     * - source_image_style (default: , 'rokka_source')
+     * - use_hash_as_name (default: true)
+     *
+     * @param string $param
+     *
+     * @return mixed
+     */
+    public function getSettings($param);
+
+    /**
      * @return \Rokka\Client\Image
      */
     public function getRokkaImageClient();
@@ -20,16 +33,29 @@ interface RokkaServiceInterface
     public function getRokkaUserClient();
 
     /**
-     * @param string $hash
+     * Get an image, given the URI.
+     *
+     * @param string $uri
      *
      * @return SourceImageMetadata
      */
-    public function loadRokkaMetadataByHash($hash);
+    public function loadRokkaMetadataByUri($uri);
 
     /**
+     * Delete an image, given its URI.
+     *
      * @param string $uri
      *
-     * @return mixed
+     * @return bool Returns True if successful, false otherwise
      */
     public function deleteRokkaMetadataByUri($uri);
+
+    /**
+     * Counts the number of images that share the same Hash.
+     *
+     * @param string $hash
+     *
+     * @return int
+     */
+    public function countImagesWithHash($hash);
 }

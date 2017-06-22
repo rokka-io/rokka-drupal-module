@@ -54,16 +54,6 @@ class RokkaService implements RokkaServiceInterface
     }
 
     /**
-     * @param string $hash
-     *
-     * @return SourceImageMetadata
-     */
-    public function loadRokkaMetadataByHash($hash)
-    {
-        // TODO: Implement loadRokkaMetadataByHash() method.
-    }
-
-    /**
      * @param string $uri
      *
      * @return mixed
@@ -71,5 +61,35 @@ class RokkaService implements RokkaServiceInterface
     public function deleteRokkaMetadataByUri($uri)
     {
         // TODO: Implement deleteRokkaMetadataByUri() method.
+    }
+
+    /**
+     * @param string $uri
+     *
+     * @return SourceImageMetadata
+     */
+    public function loadRokkaMetadataByUri($uri)
+    {
+        // TODO: Implement loadRokkaMetadataByUri() method.
+    }
+
+    /**
+     * Counts the number of images that share the same Hash.
+     *
+     * @param string $hash
+     *
+     * @return int
+     */
+    public function countImagesWithHash($hash)
+    {
+        // TODO: Implement loadRokkaMetadataByUri() method.
+        // This is the old method used in D7:
+        /*
+        $q = new \EntityFieldQuery();
+        $q->entityCondition('entity_type', 'rokka_metadata')
+            ->propertyCondition('hash', $hash)
+            ->range(null, 2);
+        $metas = $q->execute();
+        */
     }
 }
