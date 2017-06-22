@@ -2,8 +2,10 @@
 
 namespace Drupal\rokka;
 
+use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\rokka\RokkaAdapter\SourceImageMetadata;
+use Psr\Log\LoggerInterface;
 use Rokka\Client\Base;
 use Rokka\Client\Factory;
 
@@ -12,6 +14,17 @@ use Rokka\Client\Factory;
  */
 class RokkaService implements RokkaServiceInterface
 {
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
+     * @var ConfigFactory
+     */
+    private $configFactory;
+
+
     private $apiKey;
     private $organizationName;
     private $apiEndpoint;
@@ -25,16 +38,25 @@ class RokkaService implements RokkaServiceInterface
      * RokkaService constructor.
      *
      * @param EntityTypeManagerInterface $em
-     * @param string                     $apiKey
-     * @param string                     $organizationName
-     * @param string                     $apiEndpoint
+     * @param LoggerInterface            $logger
+     *
+     * @internal param string $apiKey
+     * @internal param string $organizationName
+     * @internal param string $apiEndpoint
      */
-    public function __construct(EntityTypeManagerInterface $em, $apiKey = '', $organizationName = '', $apiEndpoint = null)
+    public function __construct(EntityTypeManagerInterface $em, ConfigFactory $configFactory, LoggerInterface $logger)
     {
-        $this->apiKey = $apiKey;
-        $this->organizationName = $organizationName;
-        $this->apiEndpoint = $apiEndpoint ?: Base::DEFAULT_API_BASE_URL;
         $this->entityManager = $em;
+        $this->logger = $logger;
+        $this->configFactory = $configFactory;
+
+        $config = $configFactory->get('rokka.settings');
+
+        $this->apiKey = $config->get('rokka_api_key');
+        $this->organizationName = $config->get('organization_name');
+        $this->apiEndpoint = $config->get('api_endpoint') ?: Base::DEFAULT_API_BASE_URL;
+
+        $logger->critical($this->apiEndpoint);
     }
 
     /**
@@ -91,5 +113,22 @@ class RokkaService implements RokkaServiceInterface
             ->range(null, 2);
         $metas = $q->execute();
         */
+    }
+
+    /**
+     * Return the given setting from the Rokka module configuration.
+     *
+     * Examples:
+     * - source_image_style (default: , 'rokka_source')
+     * - use_hash_as_name (default: true)
+     *
+     * @param string $param
+     *
+     * @return mixed
+     */
+    public function getSettings($param)
+    {
+        // TODO: Implement getSettings() method.
+        return false;
     }
 }

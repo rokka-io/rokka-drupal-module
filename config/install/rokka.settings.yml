@@ -1,3 +1,4 @@
-rokka_api_key: ''
+api_key: ~
+api_endpoint: "api.rokka.io"
 is_enabled: FALSE
-organization_name: ''
+organization_name: ~
