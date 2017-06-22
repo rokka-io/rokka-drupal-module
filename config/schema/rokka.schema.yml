@@ -7,7 +7,7 @@ rokka.settings:
     rokka_api_key:
       type: string
       label: 'API Key'
-    rokka_secret_key:
+    rokka_api_secret:
       type: string
       label: 'Secret Key'
     organization_name:
