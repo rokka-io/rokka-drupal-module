@@ -6,11 +6,15 @@ services:
       arguments: ['rokka']
 
   rokka.service:
-    class: Drupal\rokka\Service
+    class: Drupal\rokka\RokkaService
+    arguments:
+      - '@entity_type.manager'
+      # Add other parameters from the Rokka configuration?
 
   rokka.stream_wrapper:
     class: Drupal\rokka\RokkaStreamWrapper
     arguments:
+      - '@rokka.service'
       - '@rokka.logger'
     tags:
       - { name: stream_wrapper, scheme: rokka }

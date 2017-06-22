@@ -14,38 +14,26 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
 {
     use StringTranslationTrait;
 
+    /**
+     * @var LoggerInterface
+     */
     private $logger;
 
     /**
-   * Configuration for this stream wrapper.
-   *
-   * @var \Drupal\rokka\Configuration
-   */
-  protected $config;
+     * @var RokkaServiceInterface
+     */
+    private $rokkaService;
 
-  /**
-   * Construct a new stream wrapper.
-   */
-  public function __construct(LoggerInterface $logger)
+    /**
+     * Construct a new stream wrapper.
+     *
+     * @param RokkaServiceInterface $rokkaService
+     * @param LoggerInterface       $logger
+     */
+  public function __construct(RokkaServiceInterface $rokkaService, LoggerInterface $logger)
   {
       $this->logger = $logger;
-
-      if (!$config) {
-          // @codeCoverageIgnoreStart
-      // $config = Configuration::fromDrupalVariables();
-      // @codeCoverageIgnoreEnd
-      }
-
-    //$imageClient = (new Client($config))->getImageClient();
-    //parent::__construct($imageClient);
-  }
-
-  /**
-   * @return \Rokka\Client\Image
-   */
-  public function getImageClient()
-  {
-      return static::$imageClient;
+      $this->rokkaService = $rokkaService;
   }
 
   /**
@@ -124,31 +112,32 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    * @return string|null
    *   Returns a string containing a web accessible URL for the resource.
    */
-  public function getExternalUrl()
-  {
-      $meta = entity_load_single('rokka_metadata', $this->uri);
+    public function getExternalUrl()
+    {
+        $meta = entity_load_single('rokka_metadata', $this->uri);
 
-      if (!($meta instanceof RokkaMetadata)) {
-          watchdog('rokka', 'Error getting getExternalUrl() for "@uri": RokkaMetadata not found!', array(
-        '@uri' => $this->uri
-      ), WATCHDOG_CRITICAL);
-          return null;
-      }
+        if (!($meta instanceof RokkaMetadata)) {
+            $this->logger->critical('Error getting getExternalUrl() for "@uri": RokkaMetadata not found!', [
+                '@uri' => $this->uri,
+            ]);
 
-    // @todo: remove the default style as soon as the getSourceImageUri
-    // will support the 'empty' image style to get the original source image
-    $defaultStyle = variable_get('rokka_source_image_style', 'rokka_source');
-      $name = null;
+            return null;
+        }
 
-      if (!variable_get('rokka_use_hash_as_name', true)) {
-          $filename = pathinfo($meta->getUri(), PATHINFO_FILENAME);
-          $name = \Drupal\rokka\Client::cleanRokkaSeoFilename($filename);
-      }
+        // @todo: remove the default style as soon as the getSourceImageUri
+        // will support the 'empty' image style to get the original source image
+        $defaultStyle = variable_get('rokka_source_image_style', 'rokka_source');
+        $name = null;
 
-      $externalUri = self::$imageClient->getSourceImageUri($meta->getHash(), $defaultStyle, 'jpg', $name);
+        if (!variable_get('rokka_use_hash_as_name', true)) {
+            $filename = pathinfo($meta->getUri(), PATHINFO_FILENAME);
+            $name = \Drupal\rokka\Client::cleanRokkaSeoFilename($filename);
+        }
 
-      return $externalUri->__toString();
-  }
+        $externalUri = self::$imageClient->getSourceImageUri($meta->getHash(), $defaultStyle, 'jpg', $name);
+
+        return $externalUri->__toString();
+    }
 
   /**
    * Return the local filesystem path.
@@ -199,28 +188,28 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
 
       // If the two images are the same we're done, just return true.
       if ($meta->getHash() == $sourceImage->hash) {
-          watchdog('rokka', 'Image re-uploaded to Rokka for "%uri": "%hash" (hash did not change)', array(
-          '%uri' => $this->uri,
-          '%hash' => $sourceImage->hash
-        ), WATCHDOG_DEBUG);
+          $this->logger->debug('Image re-uploaded to Rokka for "{uri}": "{hash}" (hash did not change)', [
+              'uri' => $this->uri,
+              'hash' => $sourceImage->hash,
+          ]);
           return true;
       }
 
-          watchdog('rokka', 'Image replaced on Rokka for "%uri": "%hash" (old hash: "%oldHash")', array(
-        '%uri' => $this->uri,
-        '%oldHash' => $meta->getHash(),
-        '%hash' => $sourceImage->hash
-      ), WATCHDOG_DEBUG);
+          $this->logger->debug('Image replaced on Rokka for "{uri}": "{hash}" (old hash: "{oldHash}")', [
+            'uri' => $this->uri,
+            'oldHash' => $meta->getHash(),
+            'hash' => $sourceImage->hash
+      ]);
 
       // Update the RokkaMetadata with the new data coming from the uploaded image.
       $meta->hash = $sourceImage->hash;
           $meta->created = $sourceImage->created->getTimestamp();
           $meta->filesize = $sourceImage->size;
       } else {
-          watchdog('rokka', 'New Image uploaded to Rokka for "%uri": "%hash"', array(
-        '%uri' => $this->uri,
-        '%hash' => $sourceImage->hash
-      ), WATCHDOG_DEBUG);
+          $this->logger->debug('New Image uploaded to Rokka for "{uri}": "{hash}"', [
+            'uri' => $this->uri,
+            'hash' => $sourceImage->hash
+          ]);
 
       // This is a new URI, track it in our RokkaMetadata entities.
       $meta = entity_create('rokka_metadata', array(
@@ -290,14 +279,14 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
     if (!empty($metas['rokka_metadata']) && count($metas['rokka_metadata']) > 1) {
         // Remove the Drupal image and FID, but don't remove the Rokka's image.
       $this->doPostSourceImageDeleted($meta);
-        watchdog('rokka', 'Image file "%uri" deleted, but kept in Rokka since HASH "%hash" is not unique on Drupal.', array(
+        $this->logger->log('Image file "%uri" deleted, but kept in Rokka since HASH "%hash" is not unique on Drupal.', array(
         '%uri' => $uri,
         '%hash' => $meta->getHash()
       ), WATCHDOG_DEBUG);
         return true;
     }
 
-      watchdog('rokka', 'Deleting image file "%uri".', array(
+      $this->logger->log('Deleting image file "%uri".', array(
       '%uri' => $uri,
       '%hash' => $meta->getHash()
     ), WATCHDOG_DEBUG);
@@ -327,7 +316,7 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
           drupal_set_message(t('An error occurred while communicating with the Rokka.io server!'), 'error');
       }
 
-        watchdog('rokka', 'Exception caught: %exceptionCode "%exceptionMessage". In %file at line %line.', array(
+        $this->logger->log('Exception caught: %exceptionCode "%exceptionMessage". In %file at line %line.', array(
         '%exceptionCode' => $exception->getCode(),
         '%exceptionMessage' => $exception->getMessage(),
         '%file' => $exception->getFile(),
