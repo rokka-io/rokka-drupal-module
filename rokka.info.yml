@@ -1,0 +1,6 @@
+name: Rokka
+type: module
+description: Say Hello World
+package: Media
+core: 8.x
+configure: rokka.admin_settings

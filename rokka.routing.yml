@@ -1,0 +1,7 @@
+rokka.admin_settings:
+  path: '/admin/config/media/rokka'
+  defaults:
+    _form: '\Drupal\rokka\Form\RokkaSettingsForm'
+    _title: 'Rokka settings'
+  requirements:
+    _permission: 'Administer Rokka'
