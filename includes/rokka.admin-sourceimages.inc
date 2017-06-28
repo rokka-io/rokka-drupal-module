@@ -28,7 +28,11 @@ function rokka_admin_sourceimages_overview() {
   $rows = array();
 
   try {
-    $images = $imageClient->listSourceImages();
+    $current_page = !empty($_GET['page']) ? $_GET['page'] : 0;
+    $offset = ROKKA_ITEMS_PER_PAGE*$current_page;
+    $images = $imageClient->searchSourceImages(array(), array(), ROKKA_ITEMS_PER_PAGE, $offset);
+    $total_img = $images->getTotal();
+
     foreach($images->getSourceImages() as $image) {
       $rows[] = array(
         // @todo: remove the default style as soon as the getSourceImageUri
@@ -40,6 +44,8 @@ function rokka_admin_sourceimages_overview() {
       );
     }
 
+    pager_default_initialize($total_img, ROKKA_ITEMS_PER_PAGE);
+
   } catch (Exception $e) {
     // 404 returned when no SourceImages are available (?), thus it's not an error.
     if (404 !== $e->getCode()) {
@@ -50,11 +56,21 @@ function rokka_admin_sourceimages_overview() {
     }
   }
 
-  $output = theme('table', array(
+  $output = '<p>' .
+    format_plural(
+      $total_img,
+      'There is currently %count image imported in Rokka.',
+      'There are currently %count images imported in Rokka.',
+      array('%count' => $total_img)
+    ) . '</p>';
+
+  $output .= theme('table', array(
     'header' => $header,
     'rows'   => $rows,
     'empty'  => t('No SourceImages found on Rokka.io service.'),
   ));
+
+  $output .= theme('pager');
 
   return $output;
 }

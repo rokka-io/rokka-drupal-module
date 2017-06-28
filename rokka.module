@@ -8,6 +8,7 @@ define('ROKKA_BASE_ADMIN_MENU_URL', 'admin/config/media/rokka');
 define('ROKKA_SCALE_MAX_WIDTH', 10000);
 define('ROKKA_SCALE_MAX_HEIGHT', 10000);
 define('ROKKA_SCHEME', 'rokka');
+define('ROKKA_ITEMS_PER_PAGE', 20);
 
 /**
  * Implements hook_menu().

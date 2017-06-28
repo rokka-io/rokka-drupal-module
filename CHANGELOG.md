@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [Unreleased]
 ### Added
+- Issue [#2890280](https://www.drupal.org/node/2890280) Issue by make77: Add a pager to list all images imported in "source images" tab
 ### Changed
 ### Removed
 ### Fixed
