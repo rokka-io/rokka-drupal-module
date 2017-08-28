@@ -5,11 +5,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [Unreleased]
 ### Added
+### Changed
+### Removed
+### Fixed
+
+## [7.x-1.2](https://www.drupal.org/project/rokka/releases/7.x-1.2)
+### Added
 - Issue [#2890280](https://www.drupal.org/node/2890280) Issue by make77: Add a pager to list all images imported in "source images" tab
 ### Changed
 - Issue [#2905031](https://www.drupal.org/node/2905031) by thePanz: Update Rokka PHP Client to v0.10
-### Removed
-### Fixed
 
 ## [7.x-1.1](https://www.drupal.org/project/rokka/releases/7.x-1.1)
 ### Changed
