@@ -6,6 +6,14 @@ rokka.admin_settings:
   requirements:
     _permission: 'Administer Rokka'
 
+rokka.admin_stacks:
+  path: '/admin/config/media/rokka/stacks'
+  defaults:
+   _form: '\Drupal\rokka\Form\StacksForm'
+   _title: 'Rokka stacks'
+  requirements:
+   _permission: 'Administer Rokka'
+
 
 route_callbacks:
   - '\Drupal\rokka\Routing\RokkaImageStyleRoutes::routes'

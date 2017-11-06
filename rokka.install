@@ -1,156 +1,157 @@
 <?php
-
-/**
- * @file
- * Install, update and uninstall functions for the Rokka module.
- */
-
-/**
- * Implements hook_install().
- */
-function rokka_install() {}
-
-/**
- * Implements hook_uninstall().
- */
-function rokka_uninstall() {
-  $variables = [
-    'rokka_api_base_url',
-    'rokka_api_key',
-    'rokka_api_secret',
-    'rokka_default_image_format',
-    'rokka_organization_name',
-    'rokka_service_is_enabled',
-    'rokka_source_image_style',
-    'rokka_use_hash_as_name',
-  ];
-  foreach($variables as $variable) {
-    variable_del($variable);
-  }
-}
-
-/**
- * Implements hook_schema().
- */
-function rokka_schema() {
-  $schema['rokka_metadata'] = [
-    'description' => 'Stores Rokka.io files hashes.',
-    'fields' => [
-      'fid' => [
-        'description' => 'The {file_managed}.fid of the metadata.',
-        'type'        => 'int',
-        'unsigned'    => TRUE,
-        'not null'    => TRUE,
-        'default'     => 0,
-      ],
-      'hash' => [
-        'description' => "The Rokka.io hash (SHA1, 40 chars) of the file.",
-        'type'        => 'varchar',
-        'length'      => 40,
-        'not null'    => TRUE,
-      ],
-      'filesize' => [
-        'type'        => 'int',
-        'size'        => 'big',
-        'not null'    => TRUE,
-        'unsigned'    => TRUE,
-      ],
-      'created' => [
-        'type'        => 'int',
-        'not null'    => TRUE,
-        'unsigned'    => TRUE,
-      ],
-      'uri' => [
-        'description' => "The original file URI.",
-        'type'        => 'varchar',
-        'not null'    => TRUE,
-        'length'      => 255,
-      ],
-    ],
-    'primary key'  => ['uri'],
-    'foreign keys' => [
-      'file_managed' => [
-        'table'   => 'file_managed',
-        'columns' => ['fid' => 'fid'],
-      ],
-    ],
-    'indexes' => [
-      'hash'  => ['hash'],
-      'uri'   => ['uri'],
-    ],
-  ];
-  $schema['rokka_stack'] = [
-    'description' => 'Stores Rokka.io Stack info.',
-    'fields' => [
-      'image_style' => [
-        'description' => 'The {image_styles}.name reference.',
-        'type'        => 'varchar',
-        'not null'    => TRUE,
-        'length'      => 255,
-      ],
-      'created' => [
-        'type'        => 'int',
-        'not null'    => TRUE,
-        'unsigned'    => TRUE,
-      ],
-      'options' => [
-        'description' => 'Stack options',
-        'type'        => 'text',
-        'not null'    => FALSE,
-        'serialize'   => TRUE,
-      ],
-    ],
-    'primary key'  => ['image_style'],
-    'foreign keys' => [
-      'file_managed' => [
-        'table'   => 'image_styles',
-        'columns' => ['image_style' => 'name'],
-      ],
-    ],
-  ];
-  return $schema;
-}
-
-/**
- * Add the RokkaStack table.
- */
-function rokka_update_7002() {
-  $schema['rokka_stack'] = [
-    'description' => 'Stores Rokka.io Stack info.',
-    'fields' => [
-      'image_style' => [
-        'description' => 'The {image_styles}.label of the Stack.',
-        'type'        => 'varchar',
-        'not null'    => TRUE,
-        'length'      => 255,
-      ],
-      'created' => [
-        'type'        => 'int',
-        'not null'    => TRUE,
-        'unsigned'    => TRUE,
-      ],
-      'options' => [
-        'description' => 'Stack options',
-        'type'        => 'text',
-        'not null'    => FALSE,
-        'serialize'   => TRUE,
-      ],
-    ],
-    'primary key'  => ['image_style'],
-    'foreign keys' => [
-      'file_managed' => [
-        'table'   => 'image_styles',
-        'columns' => ['image_style' => 'name'],
-      ],
-    ],
-  ];
-  db_create_table('rokka_stack', $schema['rokka_stack']);
-}
-/**
- * Remove RokkaMetadata table index on fid field (not used).
- */
-function rokka_update_7001() {
-  if (db_index_exists('rokka_metadata', 'fid')) {
-    db_drop_index('rokka_metadata', 'fid');
-  }
-}
+//
+///**
+// * @file
+// * Install, update and uninstall functions for the Rokka module.
+// */
+//
+///**
+// * Implements hook_install().
+// */
+//function rokka_install() {}
+//
+///**
+// * Implements hook_uninstall().
+// */
+//function rokka_uninstall() {
+//  $variables = [
+//    'rokka_api_base_url',
+//    'rokka_api_key',
+//    'rokka_api_secret',
+//    'rokka_default_image_format',
+//    'rokka_organization_name',
+//    'rokka_service_is_enabled',
+//    'rokka_source_image_style',
+//    'rokka_use_hash_as_name',
+//  ];
+//  foreach($variables as $variable) {
+//    variable_del($variable);
+//  }
+//}
+//
+///**
+// * Implements hook_schema().
+// */
+//function rokka_schema() {
+//  $schema['rokka_metadata'] = [
+//    'description' => 'Stores Rokka.io files hashes.',
+//    'fields' => [
+//      'fid' => [
+//        'description' => 'The {file_managed}.fid of the metadata.',
+//        'type'        => 'int',
+//        'unsigned'    => TRUE,
+//        'not null'    => TRUE,
+//        'default'     => 0,
+//      ],
+//      'hash' => [
+//        'description' => "The Rokka.io hash (SHA1, 40 chars) of the file.",
+//        'type'        => 'varchar',
+//        'length'      => 40,
+//        'not null'    => TRUE,
+//      ],
+//      'filesize' => [
+//        'type'        => 'int',
+//        'size'        => 'big',
+//        'not null'    => TRUE,
+//        'unsigned'    => TRUE,
+//      ],
+//      'created' => [
+//        'type'        => 'int',
+//        'not null'    => TRUE,
+//        'unsigned'    => TRUE,
+//      ],
+//      'uri' => [
+//        'description' => "The original file URI.",
+//        'type'        => 'varchar',
+//        'not null'    => TRUE,
+//        'length'      => 100,
+//      ],
+//    ],
+//    'primary key'  => ['uri'],
+//    'foreign keys' => [
+//      'file_managed' => [
+//        'table'   => 'file_managed',
+//        'columns' => ['fid' => 'fid'],
+//      ],
+//    ],
+//    'indexes' => [
+//      'hash'  => ['hash'],
+//      'uri'   => ['uri'],
+//    ],
+//  ];
+//  $schema['rokka_stack'] = [
+//    'description' => 'Stores Rokka.io Stack info.',
+//    'fields' => [
+//      'image_style' => [
+//        'description' => 'The {image_styles}.name reference.',
+//        'type'        => 'varchar',
+//        'not null'    => TRUE,
+//        'length'      => 100,
+//      ],
+//      'created' => [
+//        'type'        => 'int',
+//        'not null'    => TRUE,
+//        'unsigned'    => TRUE,
+//      ],
+//      'options' => [
+//        'description' => 'Stack options',
+//        'type'        => 'text',
+//        'not null'    => FALSE,
+//        'serialize'   => TRUE,
+//      ],
+//    ],
+//    'primary key'  => ['image_style'],
+//    'foreign keys' => [
+//      'file_managed' => [
+//        'table'   => 'image_styles',
+//        'columns' => ['image_style' => 'name'],
+//      ],
+//    ],
+//  ];
+//
+//  return $schema;
+//}
+//
+///**
+// * Add the RokkaStack table.
+// */
+//function rokka_update_7002() {
+//  $schema['rokka_stack'] = [
+//    'description' => 'Stores Rokka.io Stack info.',
+//    'fields' => [
+//      'image_style' => [
+//        'description' => 'The {image_styles}.label of the Stack.',
+//        'type'        => 'varchar',
+//        'not null'    => TRUE,
+//        'length'      => 255,
+//      ],
+//      'created' => [
+//        'type'        => 'int',
+//        'not null'    => TRUE,
+//        'unsigned'    => TRUE,
+//      ],
+//      'options' => [
+//        'description' => 'Stack options',
+//        'type'        => 'text',
+//        'not null'    => FALSE,
+//        'serialize'   => TRUE,
+//      ],
+//    ],
+//    'primary key'  => ['image_style'],
+//    'foreign keys' => [
+//      'file_managed' => [
+//        'table'   => 'image_styles',
+//        'columns' => ['image_style' => 'name'],
+//      ],
+//    ],
+//  ];
+//  db_create_table('rokka_stack', $schema['rokka_stack']);
+//}
+///**
+// * Remove RokkaMetadata table index on fid field (not used).
+// */
+//function rokka_update_7001() {
+//  if (db_index_exists('rokka_metadata', 'fid')) {
+//    db_drop_index('rokka_metadata', 'fid');
+//  }
+//}

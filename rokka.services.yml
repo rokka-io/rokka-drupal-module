@@ -7,16 +7,11 @@ services:
 
   rokka.service:
     class: Drupal\rokka\RokkaService
-    arguments:
-      - '@entity_type.manager'
-      - '@config.factory'
-      - '@rokka.logger'
+    arguments: ['@entity_type.manager', '@config.factory', '@rokka.logger']
 
   rokka.stream_wrapper:
     class: Drupal\rokka\RokkaStreamWrapper
-    arguments:
-      - '@rokka.service'
-      - '@rokka.logger'
+    arguments: ['@rokka.service', '@rokka.logger']
     tags:
       - { name: stream_wrapper, scheme: rokka }
 
@@ -24,3 +19,4 @@ services:
     class: Drupal\rokka\PathProcessor\RokkaPathProcessorImageStyles
     tags:
       - { name: path_processor_inbound, priority: 310 }
+      - { name: path_processor_outound, priority: 310 }

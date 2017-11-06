@@ -1,0 +1,59 @@
+<?php
+
+use Drupal\image\Entity\ImageStyle;
+use Drupal\rokka\Entity\RokkaStack;
+use Drupal\rokka\Client;
+use Rokka\Client\Core\StackOperation;
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ *
+ * @param \Drupal\image\Entity\ImageStyle $entity
+ */
+function rokka_image_style_presave(ImageStyle $entity) {
+
+  /** @var \Drupal\rokka\RokkaService  $rokkaService */
+  $rokkaService = \Drupal::service('rokka.service');
+  /** @var Client $client */
+  $client = $rokkaService->getRokkaImageClient();
+
+  try {
+    $stack = $client->getStack($entity->getName());
+  } catch (\Exception $e) {
+    // If an exception is raised, no ImageStack could be loaded.
+//    watchdog('rokka', 'Exception while loading ImageStack "%name" in "%function": error: "%error"', array(
+//      '%name' => $entity->getName(),
+//      '%function' => __FUNCTION__,
+//      '%error' => $e->getMessage(),
+//    ));
+    $stack = [
+      'name' => $entity->getName(),
+      'organization' => $rokkaService->getRokkaOrganizationName(),
+      'stackOperations' => [],
+      'stackOptions' => ['source_file' => TRUE],
+    ];
+  }
+
+  $client->createStack(
+    $stack->name,
+    $stack->stackOperations,
+    $stack->organization,
+    $stack->stackOptions,
+    TRUE
+  );
+
+  $rokkaStack = RokkaStack::load($entity->getName());
+
+  if (!$rokkaStack) {
+    $rokkaStack = RokkaStack::create([
+      'id' => $entity->getName(),
+      'jpg_quality' => '76',
+      'png_compression_level' => '7',
+      'interlacing_mode' => '',
+    ]);
+  } else {
+    $rokkaStack->set();
+  }
+
+  $rokkaStack->save();
+}

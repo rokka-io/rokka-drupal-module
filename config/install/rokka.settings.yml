@@ -1,4 +1,5 @@
 api_key: ~
-api_endpoint: "api.rokka.io"
+api_endpoint: "https://api.rokka.io"
 is_enabled: FALSE
 organization_name: ~
+stack_prefix: ~

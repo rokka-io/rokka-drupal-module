@@ -12,7 +12,7 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException;
 
 /**
- * Defines a controller to serve public/s3 Amazon S3 image styles.
+ * Defines a controller to serve Rokka image styles.
  */
 class RokkaImageStyleDownloadController extends ImageStyleDownloadController {
 

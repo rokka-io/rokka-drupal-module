@@ -1,0 +1,18 @@
+rokka.rokka_stack.*:
+  type: config_entity
+  label: 'Rokka stack config'
+  mapping:
+    id:
+      type: string
+      label: 'Image Style'
+    jpg_quality:
+      type: string
+      label: 'JPG quality'
+    png_compression_level:
+      type: string
+      label: 'PNG compression level'
+    interlacing_mode:
+      type: string
+      label: 'Interlacing mode'
+    uuid:
+      type: string

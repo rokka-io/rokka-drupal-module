@@ -42,15 +42,6 @@ interface RokkaServiceInterface
     public function loadRokkaMetadataByUri($uri);
 
     /**
-     * Delete an image, given its URI.
-     *
-     * @param string $uri
-     *
-     * @return bool Returns True if successful, false otherwise
-     */
-    public function deleteRokkaMetadataByUri($uri);
-
-    /**
      * Counts the number of images that share the same Hash.
      *
      * @param string $hash

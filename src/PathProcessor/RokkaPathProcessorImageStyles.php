@@ -3,6 +3,8 @@
 namespace Drupal\rokka\PathProcessor;
 
 use Drupal\Core\PathProcessor\InboundPathProcessorInterface;
+use Drupal\Core\PathProcessor\OutboundPathProcessorInterface;
+use Drupal\Core\Render\BubbleableMetadata;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -23,8 +25,10 @@ use Symfony\Component\HttpFoundation\Request;
  * @see \Drupal\image\Controller\ImageStyleDownloadController::deliver()
  * @see \Drupal\image\PathProcessor\PathProcessorImageStyles::processInbound()
  */
-class RokkaPathProcessorImageStyles implements InboundPathProcessorInterface {
+class RokkaPathProcessorImageStyles implements InboundPathProcessorInterface, OutboundPathProcessorInterface {
 
+
+//    $retek = "rokka://styles/thumbnail/rokka/2017-10/27_0.jpg";
     const IMAGE_STYLE_PATH_PREFIX = '/rokka/files/styles/';
 
     /**
@@ -32,6 +36,8 @@ class RokkaPathProcessorImageStyles implements InboundPathProcessorInterface {
      */
     public function processInbound($path, Request $request) {
         if ($this->isImageStylePath($path)) {
+
+
             // Strip out path prefix.
             $rest = preg_replace('|^' . preg_quote(static::IMAGE_STYLE_PATH_PREFIX, '|') . '|', '', $path);
 
@@ -70,4 +76,18 @@ class RokkaPathProcessorImageStyles implements InboundPathProcessorInterface {
     {
         return 'rokka' === $scheme;
     }
+
+  /**
+   * @inheritDoc
+   */
+  public function processOutbound($path, &$options = [], Request $request = NULL, BubbleableMetadata $bubbleable_metadata = NULL) {
+    $asd = '123';
+
+    if ($this->isImageStylePath($path)) {
+
+    }
+
+    return $path;
+  }
+
 }

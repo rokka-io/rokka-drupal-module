@@ -14,54 +14,54 @@ use Symfony\Component\Routing\Route;
  */
 class RokkaImageStyleRoutes implements ContainerInjectionInterface {
 
-    /**
-     * The module handler.
-     *
-     * @var \Drupal\Core\Extension\ModuleHandlerInterface
-     */
-    protected $moduleHandler;
+  /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
 
-    /**
-     * Constructs a new RokkaImageStyleRoutes object.
-     *
-     * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-     *   The module handler.
-     */
-    public function __construct(ModuleHandlerInterface $module_handler) {
-        $this->moduleHandler = $module_handler;
+  /**
+   * Constructs a new RokkaImageStyleRoutes object.
+   *
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
+   */
+  public function __construct(ModuleHandlerInterface $module_handler) {
+    $this->moduleHandler = $module_handler;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('module_handler')
+    );
+  }
+
+  /**
+   * Returns an array of route objects.
+   *
+   * @return \Symfony\Component\Routing\Route[]
+   *   An array of route objects.
+   */
+  public function routes() {
+    $routes = [];
+    // Only add route for image styles if image module is enabled.
+    if ($this->moduleHandler->moduleExists('image')) {
+      $routes['rokka.image_styles'] = new Route(
+        RokkaPathProcessorImageStyles::IMAGE_STYLE_PATH_PREFIX . '/{image_style}/{scheme}',
+        [
+          '_controller' => RokkaImageStyleDownloadController::class . '::deliver',
+        ],
+        [
+          '_access' => 'TRUE',
+        ]
+      );
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function create(ContainerInterface $container) {
-        return new static(
-            $container->get('module_handler')
-        );
-    }
-
-    /**
-     * Returns an array of route objects.
-     *
-     * @return \Symfony\Component\Routing\Route[]
-     *   An array of route objects.
-     */
-    public function routes() {
-        $routes = array();
-        // Only add route for image styles if image module is enabled.
-        if ($this->moduleHandler->moduleExists('image')) {
-            $routes['rokka.image_styles'] = new Route(
-                RokkaPathProcessorImageStyles::IMAGE_STYLE_PATH_PREFIX.'/{image_style}/{scheme}',
-                array(
-                    '_controller' => RokkaImageStyleDownloadController::class.'::deliver',
-                ),
-                array(
-                    '_access' => 'TRUE',
-                )
-            );
-        }
-
-        return $routes;
-    }
+    return $routes;
+  }
 
 }

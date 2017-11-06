@@ -2,46 +2,47 @@
 
 namespace Drupal\rokka;
 
+use Drupal\Core\Entity\Entity;
 use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\rokka\Entity\RokkaMetadata;
 use Drupal\rokka\RokkaAdapter\SourceImageMetadata;
 use Drupal\rokka\RokkaAdapter\StreamWrapper;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\Log\LoggerInterface;
 use Rokka\Client\Core\SourceImage;
 
-class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
-{
-    use StringTranslationTrait;
+class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface {
 
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
+  use StringTranslationTrait;
 
-    /**
-     * @var RokkaServiceInterface
-     */
-    private $rokkaService;
+  /**
+   * @var LoggerInterface
+   */
+  private $logger;
 
-    /**
-     * Construct a new stream wrapper.
-     *
-     * @param RokkaServiceInterface $rokkaService
-     * @param LoggerInterface       $logger
-     */
-  public function __construct(RokkaServiceInterface $rokkaService = null, LoggerInterface $logger = null)
-  {
-      // @todo: looks like Drupal is sometimes buillding this stream wrapper with no parameter,
-      //        We hard code the required services here!
-      //        It is failing when Saving an image effect of an Image style (WTF!!!)
-      $this->logger = $logger ?: \Drupal::service('rokka.logger');
-      $this->rokkaService = $rokkaService ?: \Drupal::service('rokka.service');
+  /**
+   * @var RokkaService
+   */
+  private $rokkaService;
 
-      if (null == $rokkaService) {
-          $this->logger->error(__CLASS__.' Invoked with null service (this should be an error!)');
-      }
-      parent::__construct($this->rokkaService->getRokkaImageClient());
+  /**
+   * Construct a new stream wrapper.
+   *
+   * @param RokkaServiceInterface $rokkaService
+   * @param LoggerInterface $logger
+   */
+  public function __construct() {
+    // Dependency injection will not work here, since stream wrappers
+    // are not loaded the normal way: PHP creates them automatically
+    // when certain file functions are called.  This prevents us from
+    // passing arguments to the constructor, which we'd need to do in
+    // order to use standard dependency injection as is typically done
+    // in Drupal 8.
+    $this->logger = \Drupal::service('rokka.logger');
+    $this->rokkaService = \Drupal::service('rokka.service');
+
+    parent::__construct($this->rokkaService->getRokkaImageClient());
   }
 
   /**
@@ -50,13 +51,12 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    * The "target" is the portion of the URI to the right of the scheme.
    * So in rokka://test.txt, the target is 'example/test.txt'.
    */
-  public function getTarget($uri = null)
-  {
-      if (!isset($uri)) {
-          $uri = $this->uri;
-      }
+  public function getTarget($uri = NULL) {
+    if (!isset($uri)) {
+      $uri = $this->uri;
+    }
 
-      list($scheme, $target) = explode('://', $uri, 2);
+    list($scheme, $target) = explode('://', $uri, 2);
 
     // Remove erroneous leading or trailing, forward-slashes and backslashes.
     // In the rokka:// scheme, there is never a leading slash on the target.
@@ -65,20 +65,19 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
 
   /**
    * Implements getMimeType().
-   * @todo
+   *
    */
-  public static function getMimeType($uri, $mapping = null)
-  {
-      //*
+  public static function getMimeType($uri, $mapping = NULL) {
+    //*
     if (!isset($mapping)) {
-        // The default file map, defined in file.mimetypes.inc is quite big.
+      // The default file map, defined in file.mimetypes.inc is quite big.
       // We only load it when necessary.
       include_once DRUPAL_ROOT . '/includes/file.mimetypes.inc';
-        $mapping = file_mimetype_mapping();
+      $mapping = file_mimetype_mapping();
     }
 
-      $extension = '';
-      $file_parts = explode('.', basename($uri));
+    $extension = '';
+    $file_parts = explode('.', basename($uri));
 
     // Remove the first part: a full filename should not match an extension.
     array_shift($file_parts);
@@ -89,10 +88,10 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
     // - image.jpeg, and
     // - awesome.image.jpeg
     while ($additional_part = array_pop($file_parts)) {
-        $extension = strtolower($additional_part . ($extension ? '.' . $extension : ''));
-        if (isset($mapping['extensions'][$extension])) {
-            return $mapping['mimetypes'][$mapping['extensions'][$extension]];
-        }
+      $extension = strtolower($additional_part . ($extension ? '.' . $extension : ''));
+      if (isset($mapping['extensions'][$extension])) {
+        return $mapping['mimetypes'][$mapping['extensions'][$extension]];
+      }
     }
     //*/
 
@@ -104,9 +103,8 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    *
    * In this case there is no directory string, so return an empty string.
    */
-  public function getDirectoryPath()
-  {
-      return '';
+  public function getDirectoryPath() {
+    return '';
   }
 
   /**
@@ -120,32 +118,45 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    * @return string|null
    *   Returns a string containing a web accessible URL for the resource.
    */
-    public function getExternalUrl()
-    {
-        $meta = $this->rokkaService->loadRokkaMetadataByUri($this->uri);
+  public function getExternalUrl() {
 
-        if (!($meta instanceof RokkaMetadata)) {
-            $this->logger->critical('Error getting getExternalUrl() for "{uri}": RokkaMetadata not found!', [
-                'uri' => $this->uri,
-            ]);
+    $stack_name = 'dynamic/noop';
 
-            return null;
-        }
+    if (strpos($this->uri, 'rokka://styles/') === 0) {
+      $exploded_uri = explode('/', $this->uri);
+      // @TODO Check if this image stack exists
 
-        // @todo: remove the default style as soon as the getSourceImageUri
-        // will support the 'empty' image style to get the original source image
-        $defaultStyle = $this->rokkaService->getSettings('source_image_style');
-        $name = null;
-
-        if (!$this->rokkaService->getSettings('use_hash_as_name')) {
-            $filename = pathinfo($meta->getUri(), PATHINFO_FILENAME);
-            $name = \Drupal\rokka\Client::cleanRokkaSeoFilename($filename);
-        }
-
-        $externalUri = self::$imageClient->getSourceImageUri($meta->getHash(), $defaultStyle, 'jpg', $name);
-
-        return $externalUri->__toString();
+      //      try {
+      //        self::$imageClient->getStack($exploded_uri[3]);
+      //        $replacement = $exploded_uri[3] . '/';
+      //      } catch (Exception $e) {
+      //        $replacement = '';
+      //      }
+      $stack_name = $exploded_uri[3];
     }
+
+    $meta = $this->doGetMetadataFromUri($this->uri);
+
+    if (!($meta instanceof RokkaMetadata)) {
+      $this->logger->critical('Error getting getExternalUrl() for "{uri}": RokkaMetadata not found!', [
+        'uri' => $this->uri,
+      ]);
+
+      return NULL;
+    }
+
+    $defaultStyle = $this->rokkaService->getSettings('source_image_style') ? $this->rokkaService->getSettings('source_image_style') : $stack_name;
+    $name = NULL;
+
+    if (!$this->rokkaService->getSettings('use_hash_as_name')) {
+      $filename = pathinfo($meta->getUri(), PATHINFO_FILENAME);
+      $name = Client::cleanRokkaSeoFilename($filename);
+    }
+
+    $externalUri = self::$imageClient->getSourceImageUri($meta->getHash(), $defaultStyle, 'jpg', $name);
+
+    return $externalUri->__toString();
+  }
 
   /**
    * Return the local filesystem path.
@@ -153,23 +164,21 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    * @return string
    *   The local path.
    */
-  protected function getLocalPath($uri = null)
-  {
-      if (!isset($uri)) {
-          $uri = $this->uri;
-      }
+  protected function getLocalPath($uri = NULL) {
+    if (!isset($uri)) {
+      $uri = $this->uri;
+    }
 
-      $path = str_replace('rokka://', '', $uri);
-      $path = trim($path, '/');
-      return $path;
+    $path = str_replace('rokka://', '', $uri);
+    $path = trim($path, '/');
+    return $path;
   }
 
   /**
-   * Override register() to force using hook_stream_wrappers().
+   * {@inheritdoc}
    */
-  public static function register()
-  {
-      throw new \LogicException('Drupal handles registration of stream wrappers. Implement hook_stream_wrappers() instead.');
+  public static function register() {
+    parent::register();
   }
 
   /**
@@ -183,51 +192,57 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    *
    * @return bool
    */
-  protected function doPostSourceImageSaved(SourceImage $sourceImage)
-  {
-      // At this point the image has been uploaded to Rokka.io for the
+  protected function doPostSourceImageSaved(SourceImage $sourceImage) {
+    // At this point the image has been uploaded to Rokka.io for the
     // "rokka://URI". Here we use our {rokka_metadata} table to store
     // the values returned by Rokka such as: hash, filesize, ...
 
     // First check if the URI is already tracked (i.e. the file has been overwritten).
     $meta = $this->doGetMetadataFromUri($this->uri);
-      if ($meta) {
+    if ($meta) {
 
       // If the two images are the same we're done, just return true.
       if ($meta->getHash() == $sourceImage->hash) {
-          $this->logger->debug('Image re-uploaded to Rokka for "{uri}": "{hash}" (hash did not change)', [
-              'uri' => $this->uri,
-              'hash' => $sourceImage->hash,
-          ]);
-          return true;
+        $this->logger->debug('Image re-uploaded to Rokka for "{uri}": "{hash}" (hash did not change)', [
+          'uri' => $this->uri,
+          'hash' => $sourceImage->hash,
+        ]);
+        return TRUE;
       }
 
-          $this->logger->debug('Image replaced on Rokka for "{uri}": "{hash}" (old hash: "{oldHash}")', [
-            'uri' => $this->uri,
-            'oldHash' => $meta->getHash(),
-            'hash' => $sourceImage->hash
+      $this->logger->debug('Image replaced on Rokka for "{uri}": "{hash}" (old hash: "{oldHash}")', [
+        'uri' => $this->uri,
+        'oldHash' => $meta->getHash(),
+        'hash' => $sourceImage->hash,
       ]);
 
       // Update the RokkaMetadata with the new data coming from the uploaded image.
       $meta->hash = $sourceImage->hash;
-          $meta->created = $sourceImage->created->getTimestamp();
-          $meta->filesize = $sourceImage->size;
-      } else {
-          $this->logger->debug('New Image uploaded to Rokka for "{uri}": "{hash}"', [
-            'uri' => $this->uri,
-            'hash' => $sourceImage->hash
-          ]);
+      $meta->created = $sourceImage->created->getTimestamp();
+      $meta->filesize = $sourceImage->size;
+    }
+    else {
+      $this->logger->debug('New Image uploaded to Rokka for "{uri}": "{hash}"', [
+        'uri' => $this->uri,
+        'hash' => $sourceImage->hash,
+      ]);
 
       // This is a new URI, track it in our RokkaMetadata entities.
-      $meta = entity_create('rokka_metadata', array(
+      //      $meta = entity_create('rokka_metadata', [
+      //        'uri' => $this->uri,
+      //        'hash' => $sourceImage->hash,
+      //        'filesize' => $sourceImage->size,
+      //        'created' => $sourceImage->created->getTimestamp(),
+      //      ]);
+      $meta = RokkaMetadata::create([
         'uri' => $this->uri,
         'hash' => $sourceImage->hash,
         'filesize' => $sourceImage->size,
-        'created' => $sourceImage->created->getTimestamp()
-      ));
-      }
+        'created' => $sourceImage->created->getTimestamp(),
+      ]);
+    }
 
-      return $meta->save();
+    return $meta->save();
   }
 
   /**
@@ -236,11 +251,17 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    * image from Rokka.io or the uri_stat() function).
    *
    * @param $uri
-   * @return SourceImageMetadata|null
+   *
+   * @return RokkaMetadata|null
    */
-  protected function doGetMetadataFromUri($uri)
-  {
-      $this->rokkaService->loadRokkaMetadataByUri($uri);
+  protected function doGetMetadataFromUri($uri) {
+    $metadata = $this->rokkaService->loadRokkaMetadataByUri(parent::sanitizeUri($uri));
+    if (!empty($metadata)) {
+
+      return reset($metadata);
+    }
+
+    return NULL;
   }
 
   /**
@@ -248,12 +269,14 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    * the corresponding image deleted on Rokka.io
    * The callback receives the $hash used to remove the image.
    *
-   * @param SourceImageMetadata $meta
+   * @param RokkaMetadata $meta
+   *
    * @return bool
    */
-  protected function doPostSourceImageDeleted(SourceImageMetadata $meta)
-  {
-      return $this->rokkaService->deleteRokkaMetadataByUri($meta->getUri()) !== false;
+  protected function doPostSourceImageDeleted(RokkaMetadata $meta) {
+    $test = 123;
+
+    return $meta->delete();
   }
 
   /**
@@ -271,29 +294,28 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    *
    * @see http://php.net/manual/en/streamwrapper.unlink.php
    */
-  public function unlink($uri)
-  {
-      $meta = $this->doGetMetadataFromUri($uri);
-      $hash = $meta->getHash();
+  public function unlink($uri) {
+    $meta = $this->doGetMetadataFromUri($uri);
+    $hash = $meta->getHash();
 
-      $sharedHashesCount = $this->rokkaService->countImagesWithHash($hash);
+    $sharedHashesCount = $this->rokkaService->countImagesWithHash($hash);
 
     if ($sharedHashesCount > 1) {
-        // If the same HASH is used elsewhere for another file..
-        // Remove the Drupal image and FID, but don't remove the Rokka's image.
-        $this->doPostSourceImageDeleted($meta);
-        $this->logger->debug('Image file "{uri}" deleted, but kept in Rokka since HASH "{hash}" is not unique on Drupal.', [
-            'uri' => $uri,
-            'hash' => $meta->getHash(),
-        ]);
+      // If the same HASH is used elsewhere for another file..
+      // Remove the Drupal image and FID, but don't remove the Rokka's image.
+      $this->doPostSourceImageDeleted($meta);
+      $this->logger->debug('Image file "{uri}" deleted, but kept in Rokka since HASH "{hash}" is not unique on Drupal.', [
+        'uri' => $uri,
+        'hash' => $meta->getHash(),
+      ]);
 
-        return true;
+      return TRUE;
     }
 
-      $this->logger->debug('Deleting image file "{uri}".', [
-          'uri' => $uri,
-          'hash' => $meta->getHash()
-        ]);
+    $this->logger->debug('Deleting image file "{uri}".', [
+      'uri' => $uri,
+      'hash' => $meta->getHash(),
+    ]);
 
     // Else, go on and let's our parent delete the Rokka image instance.
     return parent::unlink($uri);
@@ -305,70 +327,69 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    *
    * @param \Exception[] $exceptions
    * @param mixed $flags
+   *
    * @return bool
    * @throws \Exception
    */
-    protected function triggerException($exceptions, $flags = null)
-    {
-        $exceptions = is_array($exceptions) ? $exceptions : array($exceptions);
+  protected function triggerException($exceptions, $flags = NULL) {
+    $exceptions = is_array($exceptions) ? $exceptions : [$exceptions];
 
-        /** @var \Exception $exception */
-        foreach ($exceptions as $exception) {
-            // If we got a GuzzleException here, means that something happened during
-            // the data transfer. We throw the exception to Drupal.
-            if ($exception instanceof GuzzleException) {
-                drupal_set_message(t('An error occurred while communicating with the Rokka.io server!'), 'error');
-            }
+    /** @var \Exception $exception */
+    foreach ($exceptions as $exception) {
+      // If we got a GuzzleException here, means that something happened during
+      // the data transfer. We throw the exception to Drupal.
+      if ($exception instanceof GuzzleException) {
+        drupal_set_message(t('An error occurred while communicating with the Rokka.io server!'), 'error');
+      }
 
-            $this->logger->critical(
-                'Exception caught: {exceptionCode} "{exceptionMessage}". In {file} at line {line}.',
-                [
-                    'exceptionCode' => $exception->getCode(),
-                    'exceptionMessage' => $exception->getMessage(),
-                    'file' => $exception->getFile(),
-                    'line' => $exception->getLine(),
-                ]
-            );
-        }
-
-        if (!($flags & STREAM_URL_STAT_QUIET)) {
-            throw $exception;
-        }
-
-        return parent::triggerException($exceptions, $flags);
+      $this->logger->critical(
+        'Exception caught: {exceptionCode} "{exceptionMessage}". In {file} at line {line}.',
+        [
+          'exceptionCode' => $exception->getCode(),
+          'exceptionMessage' => $exception->getMessage(),
+          'file' => $exception->getFile(),
+          'line' => $exception->getLine(),
+        ]
+      );
     }
+
+    if (!($flags & STREAM_URL_STAT_QUIET)) {
+      throw $exception;
+    }
+
+    return parent::triggerException($exceptions, $flags);
+  }
 
   /**
    * @param string $uri
    * @param int $flags
+   *
    * @return array|bool
    */
-  public function url_stat($uri, $flags)
-  {
-      if ($this->is_dir($uri)) {
-          return $this->formatUrlStat();
-      }
+  public function url_stat($uri, $flags) {
+    if ($this->is_dir($uri)) {
+      return $this->formatUrlStat();
+    }
 
-      $meta = $this->doGetMetadataFromUri($uri);
-      if ($meta) {
-          $data = [
-              'timestamp' => $meta->getCreatedTime(),
-              'filesize' => $meta->getFilesize(),
-          ];
+    $meta = $this->doGetMetadataFromUri($uri);
+    if ($meta) {
+      $data = [
+        'timestamp' => $meta->getCreatedTime(),
+        'filesize' => $meta->getFilesize(),
+      ];
 
-          return $this->formatUrlStat($data);
-      }
+      return $this->formatUrlStat($data);
+    }
 
-      return false;
+    return FALSE;
   }
 
   /**
    * @return bool
    *   FALSE, as this stream wrapper does not support realpath().
    */
-  public function realpath()
-  {
-      return false;
+  public function realpath() {
+    return FALSE;
   }
 
   /**
@@ -382,19 +403,20 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    *   A string containing the directory name.
    *
    * @see drupal_dirname()
-   * @todo
    */
-  public function dirname($uri = null)
-  {
-      list($scheme, $target) = explode('://', $uri, 2);
-      $target = $this->getTarget($uri);
-      if (strpos($target, '/')) {
-          // If we matched a directory here, let's append '/' in the end.
-      $dirname = preg_replace('@/[^/]*$@', '', $target) . '/';
-      } else {
-          $dirname = '';
-      }
-      return $scheme . '://' . $dirname;
+  public function dirname($uri = NULL) {
+    if (!isset($uri)) {
+      $uri = $this->uri;
+    }
+    $scheme = \Drupal::service('file_system')->uriScheme($uri);
+    $dirname = dirname(file_uri_target($uri));
+
+    // When the dirname() call above is given '$scheme://', it returns '.'.
+    // But '$scheme://.' is an invalid uri, so we return "$scheme://" instead.
+    if ($dirname == '.') {
+      $dirname = '';
+    }
+    return $scheme . '://' . $dirname;
   }
 
   /**
@@ -412,30 +434,50 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    *
    * @see http://php.net/manual/en/streamwrapper.mkdir.php
    */
-  public function mkdir($uri, $mode, $options)
-  {
-      return true;
+  public function mkdir($uri, $mode, $options) {
+    // Some Drupal plugins call mkdir with a trailing slash. We mustn't store
+    // that slash in the cache.
+    $uri = rtrim($uri, '/');
+
+    //    clearstatcache(TRUE, $uri);
+    //    // If this URI already exists in the cache, return TRUE if it's a folder
+    //    // (so that recursive calls won't improperly report failure when they
+    //    // reach an existing ancestor), or FALSE if it's a file (failure).
+    //    $test_metadata = $this->readCache($uri);
+    //    if ($test_metadata) {
+    //      return (bool) $test_metadata['dir'];
+    //    }
+    //
+    //    $metadata = $this->s3fs->convertMetadata($uri, []);
+    //    $this->writeCache($metadata);
+
+    // If the STREAM_MKDIR_RECURSIVE option was specified, also create all the
+    // ancestor folders of this uri, except for the root directory.
+    $parent_dir = \Drupal::service('file_system')->dirname($uri);
+    if (($options & STREAM_MKDIR_RECURSIVE) && file_uri_target($parent_dir) != '') {
+      return $this->mkdir($parent_dir, $mode, $options);
+    }
+    return TRUE;
   }
 
-    /**
-     * @param string $uri
-     *
-     * @return bool
-     */
-    protected function is_dir($uri)
-    {
-        list($scheme, $target) = explode('://', $uri, 2);
+  /**
+   * @param string $uri
+   *
+   * @return bool
+   */
+  protected function is_dir($uri) {
+    list($scheme, $target) = explode('://', $uri, 2);
 
-        // Check if it's the root directory.
-        if (empty($target)) {
-            return true;
-        }
-        $this->logger->critical(__CLASS__.'::'.__FUNCTION__.' @'.__LINE__);
-        $this->logger->critical(__CLASS__.'::'.__FUNCTION__.' '.$uri);
-
-        // If not, check if the URI ends with '/' (eg: rokka://foldername/")
-        return strrpos($target, '/') === (strlen($target) - 1);
+    // Check if it's the root directory.
+    if (empty($target)) {
+      return TRUE;
     }
+    $this->logger->critical(__CLASS__ . '::' . __FUNCTION__ . ' @' . $target);
+    $this->logger->critical(__CLASS__ . '::' . __FUNCTION__ . ' ' . $uri);
+
+    // If not, check if the URI ends with '/' (eg: rokka://foldername/")
+    return strrpos($target, '/') === (strlen($target) - 1);
+  }
 
   /**
    * Rokka.io has no support for rmdir().
@@ -452,9 +494,8 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    *
    * @see http://php.net/manual/en/streamwrapper.rmdir.php
    */
-  public function rmdir($uri, $options)
-  {
-      return false;
+  public function rmdir($uri, $options) {
+    return FALSE;
   }
 
   /**
@@ -470,9 +511,8 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    *
    * @see http://php.net/manual/en/streamwrapper.rename.php
    */
-  public function rename($from_uri, $to_uri)
-  {
-      return false;
+  public function rename($from_uri, $to_uri) {
+    return FALSE;
   }
 
   /**
@@ -488,9 +528,8 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    *
    * @see http://php.net/manual/en/streamwrapper.dir-opendir.php
    */
-  public function dir_opendir($uri, $options)
-  {
-      return $this->is_dir($uri);
+  public function dir_opendir($uri, $options) {
+    return $this->is_dir($uri);
   }
 
   /**
@@ -503,9 +542,8 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    *
    * @see http://php.net/manual/en/streamwrapper.dir-readdir.php
    */
-  public function dir_readdir()
-  {
-      return false;
+  public function dir_readdir() {
+    return FALSE;
   }
 
   /**
@@ -518,9 +556,8 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    *
    * @see http://php.net/manual/en/streamwrapper.dir-rewinddir.php
    */
-  public function dir_rewinddir()
-  {
-      return false;
+  public function dir_rewinddir() {
+    return FALSE;
   }
 
   /**
@@ -533,93 +570,85 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    *
    * @see http://php.net/manual/en/streamwrapper.dir-closedir.php
    */
-  public function dir_closedir()
-  {
-      return true;
+  public function dir_closedir() {
+    return TRUE;
   }
 
-    /**
-     * {@inheritdoc}
-     *
-     * Always returns FALSE.
-     *
-     * @see stream_select()
-     * @see http://php.net/manual/streamwrapper.stream-cast.php
-     */
-    public function stream_cast($cast_as)
-    {
-        return false;
-    }
+  /**
+   * {@inheritdoc}
+   *
+   * Always returns FALSE.
+   *
+   * @see stream_select()
+   * @see http://php.net/manual/streamwrapper.stream-cast.php
+   */
+  public function stream_cast($cast_as) {
+    return FALSE;
+  }
 
-    /**
-     * {@inheritdoc}
-     *
-     * This wrapper does not support touch(), chmod(), chown(), or chgrp().
-     *
-     * Manual recommends return FALSE for not implemented options, but Drupal
-     * require TRUE in some cases like chmod for avoid watchdog erros.
-     *
-     * Returns FALSE if the option is not included in bypassed_options array
-     * otherwise, TRUE.
-     *
-     * @see http://php.net/manual/en/streamwrapper.stream-metadata.php
-     * @see \Drupal\Core\File\FileSystem::chmod()
-     */
-    public function stream_metadata($uri, $option, $value)
-    {
-        $bypassed_options = [STREAM_META_ACCESS];
-        return in_array($option, $bypassed_options);
-    }
+  /**
+   * {@inheritdoc}
+   *
+   * This wrapper does not support touch(), chmod(), chown(), or chgrp().
+   *
+   * Manual recommends return FALSE for not implemented options, but Drupal
+   * require TRUE in some cases like chmod for avoid watchdog erros.
+   *
+   * Returns FALSE if the option is not included in bypassed_options array
+   * otherwise, TRUE.
+   *
+   * @see http://php.net/manual/en/streamwrapper.stream-metadata.php
+   * @see \Drupal\Core\File\FileSystem::chmod()
+   */
+  public function stream_metadata($uri, $option, $value) {
+    $bypassed_options = [STREAM_META_ACCESS];
+    return in_array($option, $bypassed_options);
+  }
 
-    /**
-     * {@inheritdoc}
-     *
-     * Since Windows systems do not allow it and it is not needed for most use
-     * cases anyway, this method is not supported on local files and will trigger
-     * an error and return false. If needed, custom subclasses can provide
-     * OS-specific implementations for advanced use cases.
-     */
-    public function stream_set_option($option, $arg1, $arg2)
-    {
-        trigger_error('stream_set_option() not supported for Rokka stream wrappers', E_USER_WARNING);
-        return false;
-    }
+  /**
+   * {@inheritdoc}
+   *
+   * Since Windows systems do not allow it and it is not needed for most use
+   * cases anyway, this method is not supported on local files and will trigger
+   * an error and return false. If needed, custom subclasses can provide
+   * OS-specific implementations for advanced use cases.
+   */
+  public function stream_set_option($option, $arg1, $arg2) {
+    trigger_error('stream_set_option() not supported for Rokka stream wrappers', E_USER_WARNING);
+    return FALSE;
+  }
 
-    /**
-     * {@inheritdoc}
-     *
-     * This wrapper does not support stream_truncate.
-     *
-     * Always returns FALSE.
-     *
-     * @see http://php.net/manual/en/streamwrapper.stream-truncate.php
-     */
-    public function stream_truncate($new_size)
-    {
-        return false;
-    }
+  /**
+   * {@inheritdoc}
+   *
+   * This wrapper does not support stream_truncate.
+   *
+   * Always returns FALSE.
+   *
+   * @see http://php.net/manual/en/streamwrapper.stream-truncate.php
+   */
+  public function stream_truncate($new_size) {
+    return FALSE;
+  }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function getType()
-    {
-        return StreamWrapperInterface::NORMAL;
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public static function getType() {
+    return StreamWrapperInterface::NORMAL;
+  }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getName()
-    {
-        return $this->t('Rokka');
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public function getName() {
+    return $this->t('Rokka');
+  }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getDescription()
-    {
-        return $this->t('Rokka Storage Service.');
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public function getDescription() {
+    return $this->t('Rokka Storage Service.');
+  }
 }
