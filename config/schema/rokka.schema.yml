@@ -13,3 +13,6 @@ rokka.settings:
     organization_name:
       type: string
       label: 'Organization Name'
+    stack_prefix:
+      type: string
+      label: 'Stack Name Prefix'

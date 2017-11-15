@@ -4,15 +4,15 @@ rokka.rokka_stack.*:
   mapping:
     id:
       type: string
-      label: 'Image Style'
-    jpg_quality:
+      label: 'Image Style Name'
+    organization:
       type: string
-      label: 'JPG quality'
-    png_compression_level:
-      type: string
-      label: 'PNG compression level'
-    interlacing_mode:
-      type: string
-      label: 'Interlacing mode'
+      label: 'Organization'
+    options:
+      type: array
+      label: 'Options'
+    operations:
+      type: array
+      label: 'Operations'
     uuid:
       type: string

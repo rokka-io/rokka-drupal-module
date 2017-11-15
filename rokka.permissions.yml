@@ -11,7 +11,8 @@ delete rokka metadata entities:
   title: 'Delete Rokka Metadata Entities'
 administer rokka metadata entities:
   title: 'Administer Rokka Metadata Entities'
-  restrict access: TRUEadd rokka metadata entities:
+  restrict access: true
+add rokka metadata entities:
   title: 'Create new Rokka Metadata entities'
 
 administer rokka metadata entities:

@@ -25,9 +25,11 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *   config_prefix = "rokka_stack",
  *   admin_permission = "administer site configuration",
  *   entity_keys = {
- *     "id" = "id",
- *     "label" = "label",
- *     "uuid" = "uuid"
+ *     "name" = "id",
+ *     "organization" = "organization",
+ *     "options" = "stackOptions",
+ *     "operations" = "stackOperations",
+ *     "uuid" = "uuid",
  *   },
  *   links = {
  *     "canonical" = "/admin/structure/rokka_stack/{rokka_stack}",
@@ -41,17 +43,38 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
 class RokkaStack extends ConfigEntityBase implements RokkaStackInterface {
 
   /**
-   * The Rokka stack ID.
+   * The Rokka stack name.
    *
    * @var string
    */
   protected $id;
 
   /**
-   * The Rokka stack label.
+   * The Rokka stack $organization.
    *
    * @var string
    */
-  protected $label;
+  protected $organization;
+
+  /**
+   * The Rokka stack options.
+   *
+   * @var array
+   */
+  protected $stackOptions;
+
+  /**
+   * The Rokka stack operations.
+   *
+   * @var array
+   */
+  protected $stackOperations;
+
+  /**
+   * The Rokka stack uuid.
+   *
+   * @var string
+   */
+  protected $uuid;
 
 }

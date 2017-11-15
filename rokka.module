@@ -3,57 +3,199 @@
 use Drupal\image\Entity\ImageStyle;
 use Drupal\rokka\Entity\RokkaStack;
 use Drupal\rokka\Client;
-use Rokka\Client\Core\StackOperation;
+use Rokka\Client\Core\Stack;
+use Drupal\Core\Config\Config;
 
 /**
  * Implements hook_ENTITY_TYPE_presave().
  *
  * @param \Drupal\image\Entity\ImageStyle $entity
  */
-function rokka_image_style_presave(ImageStyle $entity) {
 
-  /** @var \Drupal\rokka\RokkaService  $rokkaService */
+function rokka_image_style_presave(ImageStyle $entity) {
+  /** @var \Drupal\rokka\RokkaService $rokkaService */
+  $rokkaService = \Drupal::service('rokka.service');
+  /** @var Client $client */
+  $client = $rokkaService->getRokkaImageClient();
+
+  $effectStack = !empty(buildStackOperationCollection($entity->getEffects()
+    ->getConfiguration())) ? buildStackOperationCollection($entity->getEffects()
+    ->getConfiguration()) : [];
+
+  // Create the stack on rokka.
+  $remoteStack = $client->createStack(
+    $entity->getName(),
+    $effectStack,
+    $rokkaService->getRokkaOrganizationName(),
+    [],
+    TRUE
+  );
+
+  // Create the config entity object.
+  $rokkaStack = RokkaStack::create([
+    'id' => $remoteStack->name,
+    'organization' => $remoteStack->organization,
+    'stackOperations' => $remoteStack->stackOperations,
+    'stackOptions' => $remoteStack->stackOptions,
+  ]);
+
+  $rokkaStack->enforceIsNew(FALSE);
+  $rokkaStack->save();
+
+  // Flush the image style cache.
+  $entity->flush();
+}
+
+/**
+ * @param array $effects
+ *
+ * @return StackOperation[]
+ */
+function buildStackOperationCollection($effects) {
+  if (empty($effects)) {
+    $effects = [
+      [
+        'name' => 'noop',
+        'data' => NULL,
+      ],
+    ];
+  }
+
+  $operations = [];
+  $currentId = 0;
+  foreach ($effects as $effect) {
+    $ops = buildStackOperation($effect);
+    if (!empty($ops)) {
+      foreach ($ops as $op) {
+        $operations[$currentId++] = $op;
+      }
+    }
+  }
+
+  if (empty($operations)) {
+    return NULL;
+  }
+
+  ksort($operations);
+  return $operations;
+}
+
+/**
+ * @param array $effect
+ *
+ * @return StackOperation[]
+ */
+function buildStackOperation(array $effect) {
+  $name = $effect['id'];
+  $className = 'Drupal\rokka\StyleEffects\Effect' . camelCase($name, TRUE);
+
+  $ret = [];
+  if (class_exists($className) && in_array('Drupal\rokka\StyleEffects\InterfaceEffectImage', class_implements($className))) {
+    /** @var InterfaceEffectImage $className */
+    $ret = $className::buildRokkaStackOperation($effect['data']);
+  }
+  else {
+    //    watchdog('rokka', 'Can not convert effect "%effect" to Rokka.io StackOperation: "%class" Class missing!', array(
+    //      '%effect' => $name,
+    //      '%class' => $className,
+    //    ));
+  }
+
+  return $ret;
+}
+
+/**
+ * @param string $str
+ *
+ * @return string
+ */
+function camelCase($str, $classCase = FALSE) {
+  // non-alpha and non-numeric characters become spaces
+  $str = preg_replace('/[^a-z0-9]+/i', ' ', $str);
+  $str = trim($str);
+  // uppercase the first character of each word
+  $str = ucwords($str);
+  $str = str_replace(' ', '', $str);
+  if (!$classCase) {
+    $str = lcfirst($str);
+  }
+
+  return $str;
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete().
+ *
+ * @param \Drupal\image\Entity\ImageStyle $entity
+ */
+function rokka_image_style_delete(ImageStyle $entity) {
+  /** @var \Drupal\rokka\RokkaService $rokkaService */
   $rokkaService = \Drupal::service('rokka.service');
   /** @var Client $client */
   $client = $rokkaService->getRokkaImageClient();
 
   try {
-    $stack = $client->getStack($entity->getName());
-  } catch (\Exception $e) {
-    // If an exception is raised, no ImageStack could be loaded.
-//    watchdog('rokka', 'Exception while loading ImageStack "%name" in "%function": error: "%error"', array(
-//      '%name' => $entity->getName(),
-//      '%function' => __FUNCTION__,
-//      '%error' => $e->getMessage(),
-//    ));
-    $stack = [
-      'name' => $entity->getName(),
-      'organization' => $rokkaService->getRokkaOrganizationName(),
-      'stackOperations' => [],
-      'stackOptions' => ['source_file' => TRUE],
-    ];
+    Drupal::configFactory()
+      ->getEditable('rokka.rokka_stack.' . $entity->getName())
+      ->delete();
+
+    return $client->deleteStack($entity->getName());
+  } catch (Exception $e) {
+    // If the Stack is not found, that means that it is already deleted.
+    if (404 === $e->getCode()) {
+      return TRUE;
+    }
+    //    // If an exception is raised, no ImageStack could be deleted.
+    //    watchdog('rokka', 'Exception while deleting ImageStack "%name" in "%function": error: "%error"', array(
+    //      '%name' => $name,
+    //      '%function' => __FUNCTION__,
+    //      '%error' => $e->getMessage(),
+    //    ));
   }
 
-  $client->createStack(
-    $stack->name,
-    $stack->stackOperations,
-    $stack->organization,
-    $stack->stackOptions,
-    TRUE
-  );
+  return FALSE;
+}
 
-  $rokkaStack = RokkaStack::load($entity->getName());
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
+   $form_object = $form_state->getFormObject();
 
-  if (!$rokkaStack) {
-    $rokkaStack = RokkaStack::create([
-      'id' => $entity->getName(),
-      'jpg_quality' => '76',
-      'png_compression_level' => '7',
-      'interlacing_mode' => '',
-    ]);
-  } else {
-    $rokkaStack->set();
-  }
+//   $config_controller = new Config;
 
-  $rokkaStack->save();
+   $stack = Drupal::config('rokka.rokka_stack.' . $form_object->getEntity()->label());
+
+   $hallo = 32;
+
+  $form['rokka_stack_options'] = [
+    '#type' => 'fieldset',
+    '#title' => 'Rokka Stack settings',
+    '#description' => t('Settings for the Rokka Stack creation'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#tree' => TRUE,
+  ];
+
+  $form['rokka_stack_options']['rokka_jpg_quality'] = [
+    '#type' => 'textfield',
+    '#title' => t('JPG quality'),
+    '#description' => t('JPEG Quality: from 1 (high compression, low quality) to 100 (low compression, high quality)'),
+    '#size' => 20,
+    '#maxlength' => 3,
+    '#required' => FALSE,
+    '#default_value' => 0,
+    '#element_validate' => ['element_validate_integer_positive'],
+  ];
+
+  $form['rokka_stack_options']['rokka_png_compression_level'] = [
+    '#type' => 'textfield',
+    '#title' => t('PNG Compression'),
+    '#description' => t('PNG compression level: from 1 (low compression, fast) to 9 (high compression, slow). Image quality is the exact same, no matter which compression is taken.'),
+    '#size' => 20,
+    '#maxlength' => 1,
+    '#required' => FALSE,
+    '#default_value' => 0,
+    '#element_validate' => ['element_validate_integer_positive'],
+  ];
 }

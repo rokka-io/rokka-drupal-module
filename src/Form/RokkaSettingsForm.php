@@ -73,7 +73,7 @@ class RokkaSettingsForm extends ConfigFormBase {
         '#title' => $this->t('Stack Name Prefix'),
         '#description' => $this->t('Adds a prefix for newly created Rokka stacks. Helps preventing overwriting existing stacks created in the Rokka.io dashboard. '),
         '#type' => 'textfield',
-        '#required' => TRUE,
+        '#required' => FALSE,
         '#default_value' => $config->get('stack_prefix'),
       ],
     ];
