@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Fixed
 
 ## [7.x-1.2](https://www.drupal.org/project/rokka/releases/7.x-1.2)
+### Fixed
+- Issue [#2919765](https://www.drupal.org/project/rokka/issues/2919765) Issue by make77: Prevent error when empty image field value
+
+## [7.x-1.2](https://www.drupal.org/project/rokka/releases/7.x-1.2)
 ### Added
 - Issue [#2890280](https://www.drupal.org/node/2890280) Issue by make77: Add a pager to list all images imported in "source images" tab
 ### Changed

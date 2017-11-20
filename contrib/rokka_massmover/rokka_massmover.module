@@ -205,7 +205,7 @@ function _rokka_massmover_get_field_files($field) {
     // Looping into the languages defined
     foreach ($field as $lang => $fieldValues) {
         foreach ($fieldValues as $imageData) {
-            if (!rokka_is_rokka_uri($imageData['uri'])) {
+            if (!empty($imageData) && !rokka_is_rokka_uri($imageData['uri'])) {
                 $ids[] = $imageData['fid'];
             }
         }
