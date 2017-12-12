@@ -41,6 +41,7 @@ class RokkaService implements RokkaServiceInterface {
    * RokkaService constructor.
    *
    * @param EntityTypeManagerInterface $em
+   * @param ConfigFactory $configFactory
    * @param LoggerInterface $logger
    *
    * @internal param string $apiKey
@@ -58,14 +59,12 @@ class RokkaService implements RokkaServiceInterface {
     $this->organizationName = $config->get('organization_name');
     $this->apiEndpoint = $config->get('api_endpoint') ?: Base::DEFAULT_API_BASE_URL;
 
-    $logger->critical($this->apiEndpoint);
   }
 
   /**
    * {@inheritdoc}
    */
   public function getRokkaImageClient() {
-    $this->logger->critical($this->apiEndpoint);
     return Factory::getImageClient($this->organizationName, $this->apiKey, '', $this->apiEndpoint);
   }
 
@@ -86,7 +85,8 @@ class RokkaService implements RokkaServiceInterface {
   /**
    * @param string $uri
    *
-   * @return SourceImageMetadata
+   * @return \Drupal\Core\Entity\EntityInterface[]
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    */
   public function loadRokkaMetadataByUri($uri) {
     $rokka_metadata_storage = \Drupal::entityTypeManager()
@@ -128,5 +128,18 @@ class RokkaService implements RokkaServiceInterface {
   public function getSettings($param) {
     // TODO: Implement getSettings() method.
     return FALSE;
+  }
+
+  /**
+   * Returns the SEO compliant filename for the given image name.
+   *
+   * @param $filename
+   * @return string
+   */
+  public static function cleanRokkaSeoFilename($filename)
+  {
+    // Rokka.io accepts SEO URL part as "[a-z0-9-]" only, remove not valid
+    // characters and replace them with '-'
+    return preg_replace('@[^a-z0-9-]@', '-', strtolower($filename));
   }
 }

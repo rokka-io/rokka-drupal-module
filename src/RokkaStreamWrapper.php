@@ -29,8 +29,8 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
   /**
    * Construct a new stream wrapper.
    *
-   * @param RokkaServiceInterface $rokkaService
-   * @param LoggerInterface $logger
+   * @internal  RokkaServiceInterface $rokkaService
+   * @internal LoggerInterface $logger
    */
   public function __construct() {
     // Dependency injection will not work here, since stream wrappers
@@ -150,7 +150,7 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
 
     if (!$this->rokkaService->getSettings('use_hash_as_name')) {
       $filename = pathinfo($meta->getUri(), PATHINFO_FILENAME);
-      $name = Client::cleanRokkaSeoFilename($filename);
+      $name = RokkaService::cleanRokkaSeoFilename($filename);
     }
 
     $externalUri = self::$imageClient->getSourceImageUri($meta->getHash(), $defaultStyle, 'jpg', $name);

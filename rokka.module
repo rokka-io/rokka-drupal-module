@@ -2,9 +2,10 @@
 
 use Drupal\image\Entity\ImageStyle;
 use Drupal\rokka\Entity\RokkaStack;
-use Drupal\rokka\Client;
+use Drupal\rokka\StyleEffects\InterfaceEffectImage;
 use Rokka\Client\Core\Stack;
 use Drupal\Core\Config\Config;
+use Rokka\Client\Core\StackOperation;
 
 /**
  * Implements hook_ENTITY_TYPE_presave().
@@ -15,7 +16,6 @@ use Drupal\Core\Config\Config;
 function rokka_image_style_presave(ImageStyle $entity) {
   /** @var \Drupal\rokka\RokkaService $rokkaService */
   $rokkaService = \Drupal::service('rokka.service');
-  /** @var Client $client */
   $client = $rokkaService->getRokkaImageClient();
 
   $effectStack = !empty(buildStackOperationCollection($entity->getEffects()
@@ -23,13 +23,8 @@ function rokka_image_style_presave(ImageStyle $entity) {
     ->getConfiguration()) : [];
 
   // Create the stack on rokka.
-  $remoteStack = $client->createStack(
-    $entity->getName(),
-    $effectStack,
-    $rokkaService->getRokkaOrganizationName(),
-    [],
-    TRUE
-  );
+  $stack = new Stack( $rokkaService->getRokkaOrganizationName(), $entity->getName(), $effectStack);
+  $remoteStack = $client->saveStack($stack, ['overwrite' => true]);
 
   // Create the config entity object.
   $rokkaStack = RokkaStack::create([
@@ -127,11 +122,11 @@ function camelCase($str, $classCase = FALSE) {
  * Implements hook_ENTITY_TYPE_delete().
  *
  * @param \Drupal\image\Entity\ImageStyle $entity
+ * @return bool
  */
 function rokka_image_style_delete(ImageStyle $entity) {
   /** @var \Drupal\rokka\RokkaService $rokkaService */
   $rokkaService = \Drupal::service('rokka.service');
-  /** @var Client $client */
   $client = $rokkaService->getRokkaImageClient();
 
   try {
