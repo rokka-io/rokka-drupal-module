@@ -202,10 +202,10 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
     if ($meta) {
 
       // If the two images are the same we're done, just return true.
-      if ($meta->getHash() == $sourceImage->hash) {
+      if ($meta->getHash() == $sourceImage->shortHash) {
         $this->logger->debug('Image re-uploaded to Rokka for "{uri}": "{hash}" (hash did not change)', [
           'uri' => $this->uri,
-          'hash' => $sourceImage->hash,
+          'hash' => $sourceImage->shortHash,
         ]);
         return TRUE;
       }
@@ -213,30 +213,30 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
       $this->logger->debug('Image replaced on Rokka for "{uri}": "{hash}" (old hash: "{oldHash}")', [
         'uri' => $this->uri,
         'oldHash' => $meta->getHash(),
-        'hash' => $sourceImage->hash,
+        'hash' => $sourceImage->shortHash,
       ]);
 
       // Update the RokkaMetadata with the new data coming from the uploaded image.
-      $meta->hash = $sourceImage->hash;
+      $meta->hash = $sourceImage->shortHash;
       $meta->created = $sourceImage->created->getTimestamp();
       $meta->filesize = $sourceImage->size;
     }
     else {
       $this->logger->debug('New Image uploaded to Rokka for "{uri}": "{hash}"', [
         'uri' => $this->uri,
-        'hash' => $sourceImage->hash,
+        'hash' => $sourceImage->shortHash,
       ]);
 
       // This is a new URI, track it in our RokkaMetadata entities.
       //      $meta = entity_create('rokka_metadata', [
       //        'uri' => $this->uri,
-      //        'hash' => $sourceImage->hash,
+      //        'hash' => $sourceImage->shortHash,
       //        'filesize' => $sourceImage->size,
       //        'created' => $sourceImage->created->getTimestamp(),
       //      ]);
       $meta = RokkaMetadata::create([
         'uri' => $this->uri,
-        'hash' => $sourceImage->hash,
+        'hash' => $sourceImage->shortHash,
         'filesize' => $sourceImage->size,
         'created' => $sourceImage->created->getTimestamp(),
       ]);
