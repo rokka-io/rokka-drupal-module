@@ -160,13 +160,13 @@ function rokka_image_style_delete(ImageStyle $entity) {
  * Implements hook_form_FORM_ID_alter().
  */
 function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
-   $form_object = $form_state->getFormObject();
+  $form_object = $form_state->getFormObject();
 
 //   $config_controller = new Config;
 
-   $stack = Drupal::config('rokka.rokka_stack.' . $form_object->getEntity()->label());
+  $stack = Drupal::config('rokka.rokka_stack.' . $form_object->getEntity()->label());
 
-   $hallo = 32;
+  $hallo = 32;
 
   $form['rokka_stack_options'] = [
     '#type' => 'fieldset',
@@ -185,17 +185,26 @@ function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
     '#maxlength' => 3,
     '#required' => FALSE,
     '#default_value' => 0,
-    '#element_validate' => ['element_validate_integer_positive'],
+    '#min' => 0,
+    '#max' => 100,
   ];
-
-  $form['rokka_stack_options']['rokka_png_compression_level'] = [
+  $form['rokka_stack_options']['rokka_webp_quality'] = [
     '#type' => 'textfield',
-    '#title' => t('PNG Compression'),
-    '#description' => t('PNG compression level: from 1 (low compression, fast) to 9 (high compression, slow). Image quality is the exact same, no matter which compression is taken.'),
+    '#title' => t('WEBP quality'),
+    '#description' => t('WEBP Quality: from 1 (high compression, low quality) to 100 (low compression, high quality)'),
     '#size' => 20,
-    '#maxlength' => 1,
+    '#maxlength' => 3,
     '#required' => FALSE,
     '#default_value' => 0,
-    '#element_validate' => ['element_validate_integer_positive'],
+    '#min' => 0,
+    '#max' => 100,
   ];
+  $form['rokka_stack_options']['rokka_autoformat'] = [
+    '#type' => 'checkbox',
+    '#title' => t('autoformat '),
+    '#description' => t('If set, rokka delivers the best format supported by the browser.'),
+    '#required' => FALSE,
+    '#default_value' => 1,
+  ];
+
 }
