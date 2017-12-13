@@ -2,8 +2,10 @@
 
 namespace Drupal\rokka\RokkaAdapter;
 
-interface RokkaStackInterface
-{
+/**
+ *
+ */
+interface RokkaStackInterface {
 
   /**
    * @return array The Stack options.
@@ -26,7 +28,7 @@ interface RokkaStackInterface
   public function setJpgQuality($value);
 
   /**
-   * @return integer
+   * @return int
    */
   public function getJpgQuality();
 
@@ -36,7 +38,7 @@ interface RokkaStackInterface
   public function setPngCompressionLevel($value);
 
   /**
-   * @return integer
+   * @return int
    */
   public function getPngCompressionLevel();
 
@@ -49,4 +51,5 @@ interface RokkaStackInterface
    * @return string
    */
   public function getInterlacingMode();
+
 }

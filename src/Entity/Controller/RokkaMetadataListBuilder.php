@@ -4,7 +4,6 @@ namespace Drupal\rokka\Entity\Controller;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
-use Drupal\Core\Url;
 
 /**
  * Provides a list controller for content_entity_example_contact entity.
@@ -22,10 +21,10 @@ class RokkaMetadataListBuilder extends EntityListBuilder {
    */
   public function render() {
     $build['description'] = [
-      '#markup' => $this->t('Content Entity Example implements a Contacts model. These contacts are fieldable entities. You can manage the fields on the <a href="@adminlink">Contacts admin page</a>.', array(
+      '#markup' => $this->t('Content Entity Example implements a Contacts model. These contacts are fieldable entities. You can manage the fields on the <a href="@adminlink">Contacts admin page</a>.', [
         '@adminlink' => \Drupal::urlGenerator()
           ->generateFromRoute('rokka.rokka_metadata_settings'),
-      )),
+      ]),
     ];
 
     $build += parent::render();
@@ -61,4 +60,3 @@ class RokkaMetadataListBuilder extends EntityListBuilder {
   }
 
 }
-?>

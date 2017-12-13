@@ -2,9 +2,12 @@
 
 namespace Drupal\rokka\RokkaAdapter;
 
-interface SourceImageMetadata
-{
-    /**
+/**
+ *
+ */
+interface SourceImageMetadata {
+
+  /**
    * @return string
    */
   public function getHash();
@@ -23,4 +26,5 @@ interface SourceImageMetadata
    * @return string
    */
   public function getUri();
+
 }

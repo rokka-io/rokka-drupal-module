@@ -28,54 +28,54 @@ use Symfony\Component\HttpFoundation\Request;
 class RokkaPathProcessorImageStyles implements InboundPathProcessorInterface, OutboundPathProcessorInterface {
 
 
-//    $retek = "rokka://styles/thumbnail/rokka/2017-10/27_0.jpg";
-    const IMAGE_STYLE_PATH_PREFIX = '/rokka/files/styles/';
+  // $retek = "rokka://styles/thumbnail/rokka/2017-10/27_0.jpg";.
+  const IMAGE_STYLE_PATH_PREFIX = '/rokka/files/styles/';
 
-    /**
-     * {@inheritdoc}
-     */
-    public function processInbound($path, Request $request) {
-        if ($this->isImageStylePath($path)) {
+  /**
+   * {@inheritdoc}
+   */
+  public function processInbound($path, Request $request) {
+    if ($this->isImageStylePath($path)) {
 
+      // Strip out path prefix.
+      $rest = preg_replace('|^' . preg_quote(static::IMAGE_STYLE_PATH_PREFIX, '|') . '|', '', $path);
 
-            // Strip out path prefix.
-            $rest = preg_replace('|^' . preg_quote(static::IMAGE_STYLE_PATH_PREFIX, '|') . '|', '', $path);
+      // Get the image style, scheme and path.
+      if (substr_count($rest, '/') >= 2) {
+        list($image_style, $scheme, $file) = explode('/', $rest, 3);
 
-            // Get the image style, scheme and path.
-            if (substr_count($rest, '/') >= 2) {
-                list($image_style, $scheme, $file) = explode('/', $rest, 3);
-
-                if ($this->isValidScheme($scheme)) {
-                    // Set the file as query parameter.
-                    $request->query->set('file', $file);
-                    $path = static::IMAGE_STYLE_PATH_PREFIX . $image_style . '/' . $scheme;
-                }
-            }
+        if ($this->isValidScheme($scheme)) {
+          // Set the file as query parameter.
+          $request->query->set('file', $file);
+          $path = static::IMAGE_STYLE_PATH_PREFIX . $image_style . '/' . $scheme;
         }
-
-        return $path;
+      }
     }
 
-    /**
-     * Check if the path is a Rokka image style path.
-     *
-     * @param $path
-     * @return bool
-     */
-    private function isImageStylePath($path) {
-        return strpos($path, static::IMAGE_STYLE_PATH_PREFIX) === 0;
-    }
+    return $path;
+  }
 
-    /**
-     * Check if scheme is a Rokka image style.
-     *
-     * @param $scheme
-     * @return bool
-     */
-    private function isValidScheme($scheme)
-    {
-        return 'rokka' === $scheme;
-    }
+  /**
+   * Check if the path is a Rokka image style path.
+   *
+   * @param $path
+   *
+   * @return bool
+   */
+  private function isImageStylePath($path) {
+    return strpos($path, static::IMAGE_STYLE_PATH_PREFIX) === 0;
+  }
+
+  /**
+   * Check if scheme is a Rokka image style.
+   *
+   * @param $scheme
+   *
+   * @return bool
+   */
+  private function isValidScheme($scheme) {
+    return 'rokka' === $scheme;
+  }
 
   /**
    * @inheritDoc

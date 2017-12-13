@@ -2,6 +2,9 @@
 
 namespace Drupal\rokka\StyleEffects;
 
+/**
+ *
+ */
 interface InterfaceEffectImage {
 
   /**
@@ -9,4 +12,5 @@ interface InterfaceEffectImage {
    * @return \Rokka\Client\Core\StackOperation[]
    */
   public static function buildRokkaStackOperation($data);
+
 }

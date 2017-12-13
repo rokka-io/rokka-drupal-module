@@ -7,15 +7,17 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\rokka\Entity\RokkaMetadata;
 use Drupal\rokka\RokkaAdapter\StreamWrapper;
 use GuzzleHttp\Exception\GuzzleException;
-use Psr\Log\LoggerInterface;
 use Rokka\Client\Core\SourceImage;
 
+/**
+ *
+ */
 class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface {
 
   use StringTranslationTrait;
 
   /**
-   * @var LoggerInterface
+   * @var \Psr\Log\LoggerInterface
    */
   private $logger;
 
@@ -27,7 +29,7 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
   /**
    * Construct a new stream wrapper.
    *
-   * @internal  RokkaServiceInterface $rokkaService
+   * @internal RokkaServiceInterface $rokkaService
    * @internal LoggerInterface $logger
    */
   public function __construct() {
@@ -63,10 +65,9 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
 
   /**
    * Implements getMimeType().
-   *
    */
   public static function getMimeType($uri, $mapping = NULL) {
-    //*
+    // *.
     if (!isset($mapping)) {
       // The default file map, defined in file.mimetypes.inc is quite big.
       // We only load it when necessary.
@@ -84,15 +85,14 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
     // For my.awesome.image.jpeg, we try:
     // - jpeg
     // - image.jpeg, and
-    // - awesome.image.jpeg
+    // - awesome.image.jpeg.
     while ($additional_part = array_pop($file_parts)) {
       $extension = strtolower($additional_part . ($extension ? '.' . $extension : ''));
       if (isset($mapping['extensions'][$extension])) {
         return $mapping['mimetypes'][$mapping['extensions'][$extension]];
       }
     }
-    //*/
-
+    // */.
     return 'application/octet-stream';
   }
 
@@ -124,12 +124,12 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
       $exploded_uri = explode('/', $this->uri);
       // @TODO Check if this image stack exists
 
-      //      try {
+      // Try {
       //        self::$imageClient->getStack($exploded_uri[3]);
       //        $replacement = $exploded_uri[3] . '/';
       //      } catch (Exception $e) {
       //        $replacement = '';
-      //      }
+      //      }.
       $stack_name = $exploded_uri[3];
     }
 
@@ -186,7 +186,7 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    *
    * @see RokkaStreamWrapper::stream_flush()
    *
-   * @param SourceImage $sourceImage
+   * @param \Rokka\Client\Core\SourceImage $sourceImage
    *
    * @return bool
    */
@@ -194,7 +194,6 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
     // At this point the image has been uploaded to Rokka.io for the
     // "rokka://URI". Here we use our {rokka_metadata} table to store
     // the values returned by Rokka such as: hash, filesize, ...
-
     // First check if the URI is already tracked (i.e. the file has been overwritten).
     $meta = $this->doGetMetadataFromUri($this->uri);
     if ($meta) {
@@ -250,7 +249,7 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    *
    * @param $uri
    *
-   * @return RokkaMetadata|null
+   * @return \Drupal\rokka\Entity\RokkaMetadata|null
    */
   protected function doGetMetadataFromUri($uri) {
     $metadata = $this->rokkaService->loadRokkaMetadataByUri(parent::sanitizeUri($uri));
@@ -267,7 +266,7 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    * the corresponding image deleted on Rokka.io
    * The callback receives the $hash used to remove the image.
    *
-   * @param RokkaMetadata $meta
+   * @param \Drupal\rokka\Entity\RokkaMetadata $meta
    *
    * @return bool
    */
@@ -327,6 +326,7 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    * @param mixed $flags
    *
    * @return bool
+   *
    * @throws \Exception
    */
   protected function triggerException($exceptions, $flags = NULL) {
@@ -437,7 +437,7 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
     // that slash in the cache.
     $uri = rtrim($uri, '/');
 
-    //    clearstatcache(TRUE, $uri);
+    // clearstatcache(TRUE, $uri);
     //    // If this URI already exists in the cache, return TRUE if it's a folder
     //    // (so that recursive calls won't improperly report failure when they
     //    // reach an existing ancestor), or FALSE if it's a file (failure).
@@ -448,7 +448,6 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
     //
     //    $metadata = $this->s3fs->convertMetadata($uri, []);
     //    $this->writeCache($metadata);
-
     // If the STREAM_MKDIR_RECURSIVE option was specified, also create all the
     // ancestor folders of this uri, except for the root directory.
     $parent_dir = \Drupal::service('file_system')->dirname($uri);
@@ -488,7 +487,7 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    * @return bool
    *   TRUE if the directory was successfully deleted.
    *
-   * Always return FALSE. (not supported)
+   *   Always return FALSE. (not supported)
    *
    * @see http://php.net/manual/en/streamwrapper.rmdir.php
    */
@@ -536,7 +535,7 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    * @return string|bool
    *   The next filename, or FALSE if there are no more files in the directory.
    *
-   * Always returns FALSE. (not supported)
+   *   Always returns FALSE. (not supported)
    *
    * @see http://php.net/manual/en/streamwrapper.dir-readdir.php
    */
@@ -550,7 +549,7 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    * @return bool
    *   TRUE on success.
    *
-   * Always returns FALSE. (not supported)
+   *   Always returns FALSE. (not supported)
    *
    * @see http://php.net/manual/en/streamwrapper.dir-rewinddir.php
    */
@@ -564,7 +563,7 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    * @return bool
    *   TRUE on success.
    *
-   * Always returns TRUE. (not supported)
+   *   Always returns TRUE. (not supported)
    *
    * @see http://php.net/manual/en/streamwrapper.dir-closedir.php
    */
@@ -649,4 +648,5 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
   public function getDescription() {
     return $this->t('Rokka Storage Service.');
   }
+
 }

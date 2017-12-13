@@ -27,4 +27,3 @@ entity.rokka_metadata.delete_form:
   base_route:  entity.rokka_metadata.canonical
   title: Delete
   weight: 10
-

@@ -24,6 +24,9 @@ class RokkaSettingsForm extends ConfigFormBase {
     return ['rokka.settings'];
   }
 
+  /**
+   *
+   */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('rokka.settings');
 
@@ -96,4 +99,5 @@ class RokkaSettingsForm extends ConfigFormBase {
 
     parent::submitForm($form, $form_state);
   }
+
 }

@@ -2,14 +2,16 @@
 
 namespace Drupal\rokka;
 
-use Drupal\rokka\StyleEffects\InterfaceEffectImage;
-use Rokka\Client\Core\StackOperation;
-
+/**
+ *
+ */
 class ImageStyleHelper {
 
   /**
    * Returns the Angle value in [0-360] interval.
+   *
    * @param $angle
+   *
    * @return int
    */
   public static function operationNormalizeAngle($angle) {
@@ -39,17 +41,18 @@ class ImageStyleHelper {
 
   /**
    * @param array $effects
-   * @return StackOperation[]
+   * @return \Rokka\Client\Core\StackOperation[]
    */
   public static function buildStackOperationCollection($effects) {
     if (empty($effects)) {
-      $effects = array(array(
+      $effects = [[
         'name' => 'noop',
         'data' => NULL,
-      ));
+      ],
+      ];
     }
 
-    $operations = array();
+    $operations = [];
     $currentId = 0;
     foreach ($effects as $effect) {
       $ops = static::buildStackOperation($effect);
@@ -70,21 +73,22 @@ class ImageStyleHelper {
 
   /**
    * @param array $effect
-   * @return StackOperation[]
+   * @return \Rokka\Client\Core\StackOperation[]
    */
   public static function buildStackOperation(array $effect) {
     $name = $effect['name'];
     $className = 'Drupal\rokka\StyleEffects\Effect' . static::camelCase($name, TRUE);
 
-    $ret = array();
+    $ret = [];
     if (class_exists($className) && in_array('Drupal\rokka\StyleEffects\InterfaceEffectImage', class_implements($className))) {
-      /** @var InterfaceEffectImage $className */
+      /** @var \Drupal\rokka\StyleEffects\InterfaceEffectImage $className */
       $ret = $className::buildRokkaStackOperation($effect['data']);
-    } else {
-      watchdog('rokka', 'Can not convert effect "%effect" to Rokka.io StackOperation: "%class" Class missing!', array(
+    }
+    else {
+      watchdog('rokka', 'Can not convert effect "%effect" to Rokka.io StackOperation: "%class" Class missing!', [
         '%effect' => $name,
         '%class' => $className,
-      ));
+      ]);
     }
 
     return $ret;
@@ -95,10 +99,10 @@ class ImageStyleHelper {
    * @return string
    */
   public static function camelCase($str, $classCase = FALSE) {
-    // non-alpha and non-numeric characters become spaces
+    // non-alpha and non-numeric characters become spaces.
     $str = preg_replace('/[^a-z0-9]+/i', ' ', $str);
     $str = trim($str);
-    // uppercase the first character of each word
+    // Uppercase the first character of each word.
     $str = ucwords($str);
     $str = str_replace(' ', '', $str);
     if (!$classCase) {

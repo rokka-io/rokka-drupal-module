@@ -1,37 +1,4 @@
 <?php
-/**
- * @class RokkaStreamWrapper
- *
- * This is a low-level stream implementation for the "rokka://" wrapper
- *   handler,
- * only stream read/write functions are defined here, thus leaving all the
- * folder and file stat functions to be implemented in child classes.
- *
- * Further notices:
- *  1. Since no concept of directories exists, all the directory related
- *   functions are defined as 'abstract', thus requiring children classes to be
- *   implement a filesystem virtualization.
- *
- * 2. This wrapper's support for uri_stat() function, stream_read() and
- *   stream_seek() is dependent to the availability of the Rokka.io file HASH.
- *   To fully support such feature this class must extended and the following
- *   function implemented: "buildHashFromUri($uri)".
- *
- * To further support the management of Rokka.io HASHes, the following
- *   functions
- * must be implemented to keep track of the URI/HASH mappings:
- *
- *  - doGetMetadataFromUri($uri)
- *      Used to retrieve, from a given uri, the related SourceImageMetadata
- *   object
- *  - doPostSourceImageDeleted(SourceImageMetadata $meta)
- *      This method is invoked after a Rokka image file get removed, useful to
- *      keep track of successfully removed images
- *  - doPostSourceImageSaved(ImageSource $source)
- *      This method is invoked afer a Rokka image file is successfully uploaded
- *      to Rokka, the $source objects contains the associated
- *   SourceImageMedadata
- */
 
 namespace Drupal\rokka\RokkaAdapter;
 
@@ -41,18 +8,25 @@ use GuzzleHttp\Psr7\Stream;
 use Rokka\Client\Core\SourceImage;
 use Rokka\Client\Image;
 
+/**
+ *
+ */
 abstract class StreamWrapper {
 
-  /** @var Stream $this ->body */
+  /**
+   * @var \GuzzleHttp\Psr7\Stream*/
   protected $body;
 
-  /** @var Image */
+  /**
+   * @var \Rokka\Client\Image*/
   protected static $imageClient;
 
-  /** @var string */
+  /**
+   * @var string*/
   protected $uri;
 
-  /** @var string */
+  /**
+   * @var string*/
   protected $mode;
 
   public static $supportedModes = ['w', 'r'];
@@ -61,22 +35,22 @@ abstract class StreamWrapper {
    * @param \Rokka\Client\Image $imageClient
    */
   public function __construct(Image $imageClient) {
-    //    if (!static::$bodies) {
+    // If (!static::$bodies) {
     //      static::$bodies = [];
-    //    }
+    //    }.
     static::$imageClient = $imageClient;
 
   }
 
   /**
-   * @param SourceImage $sourceImage
+   * @param \Rokka\Client\Core\SourceImage $sourceImage
    *
    * @return bool
    */
   abstract protected function doPostSourceImageSaved(SourceImage $sourceImage);
 
   /**
-   * @param RokkaMetadata $meta
+   * @param \Drupal\rokka\Entity\RokkaMetadata $meta
    *
    * @return bool
    */
@@ -85,7 +59,7 @@ abstract class StreamWrapper {
   /**
    * @param $uri
    *
-   * @return SourceImageMetadata
+   * @return \Rokka\Client\Core\SourceImageMetadata
    */
   abstract protected function doGetMetadataFromUri($uri);
 
@@ -107,7 +81,7 @@ abstract class StreamWrapper {
    *   An array with file status, or FALSE in case of an error - see fstat()
    *   for a description of this array.
    *
-   * Use the formatUrlStat() function as an helper for return values.
+   *   Use the formatUrlStat() function as an helper for return values.
    *
    * @see http://php.net/manual/en/streamwrapper.url-stat.php
    */
@@ -128,7 +102,7 @@ abstract class StreamWrapper {
   }
 
   /**
-   * Close the stream
+   * Close the stream.
    */
   public function stream_close() {
     if ($this->body) {
@@ -151,7 +125,7 @@ abstract class StreamWrapper {
   public function stream_open($path, $mode, $options, &$opened_path) {
     $this->uri = $path;
 
-    // We don't care about the binary flag
+    // We don't care about the binary flag.
     $this->mode = rtrim($mode, 'bt');
 
     // $this->params = $params = $this->getParams($path);
@@ -186,7 +160,7 @@ abstract class StreamWrapper {
   }
 
   /**
-   * Write data the to the stream
+   * Write data the to the stream.
    *
    * @param string $data
    *
@@ -238,13 +212,14 @@ abstract class StreamWrapper {
         return $this->triggerException($exception);
       }
 
-      /** @var SourceImage $image */
+      /** @var \Rokka\Client\Core\SourceImage $image */
       $image = reset($imageCollection->getSourceImages());
       $image->size = $this->body->getSize();
 
-      // Invoking Post-Save callback
+      // Invoking Post-Save callback.
       return $this->doPostSourceImageSaved($image);
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e) {
       $this->body = NULL;
       return $this->triggerException($e);
     }
@@ -268,8 +243,10 @@ abstract class StreamWrapper {
   /**
    * Initialize the stream wrapper for a write only stream.
    *
-   * @param array $params Operation parameters
-   * @param array $errors Any encountered errors to append to
+   * @param array $params
+   *   Operation parameters.
+   * @param array $errors
+   *   Any encountered errors to append to.
    *
    * @return bool
    */
@@ -286,7 +263,8 @@ abstract class StreamWrapper {
       self::$imageClient->listStacks(1);
       $this->body = new Stream(fopen('php://temp', 'r+'));
       return TRUE;
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e) {
       $errors[] = $e;
       return $this->triggerException($errors);
     }
@@ -295,8 +273,10 @@ abstract class StreamWrapper {
   /**
    * Initialize the stream wrapper for a read only stream.
    *
-   * @param array $params Operation parameters
-   * @param array $errors Any encountered errors to append to
+   * @param array $params
+   *   Operation parameters.
+   * @param array $errors
+   *   Any encountered errors to append to.
    *
    * @return bool
    */
@@ -317,11 +297,12 @@ abstract class StreamWrapper {
 
       $this->body = new Stream($sourceStream, 'rb');
 
-      // Wrap the body in a caching entity body if seeking is allowed
+      // Wrap the body in a caching entity body if seeking is allowed.
       if (!$this->body->isSeekable()) {
         $this->body = new CachingStream($this->body);
       }
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e) {
       $errors[] = $e;
       return $this->triggerException($errors);
     }
@@ -330,6 +311,7 @@ abstract class StreamWrapper {
 
   /**
    * Clean the Drupal image style url schema.
+   *
    * @param $uri
    *
    * @return mixed
@@ -361,7 +343,8 @@ abstract class StreamWrapper {
     try {
       return self::$imageClient->deleteSourceImage($meta->getHash())
         && $this->doPostSourceImageDeleted($meta);
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e) {
       return $this->triggerException($e, STREAM_URL_STAT_QUIET);
     }
   }
@@ -381,7 +364,8 @@ abstract class StreamWrapper {
   /**
    * Read data from the underlying stream.
    *
-   * @param int $count Amount of bytes to read
+   * @param int $count
+   *   Amount of bytes to read.
    *
    * @return string
    *   Always returns FALSE. (not supported)
@@ -394,13 +378,15 @@ abstract class StreamWrapper {
   }
 
   /**
-   * Seek to a specific byte in the stream
+   * Seek to a specific byte in the stream.
    *
-   * @param int $offset Seek offset
-   * @param int $whence Whence (SEEK_SET, SEEK_CUR, SEEK_END)
+   * @param int $offset
+   *   Seek offset.
+   * @param int $whence
+   *   Whence (SEEK_SET, SEEK_CUR, SEEK_END)
    *
    * @return bool
-   *  Always returns FALSE. (not supported)
+   *   Always returns FALSE. (not supported)
    */
   public function stream_seek($offset, $whence = SEEK_SET) {
     if ($this->body->isSeekable()) {
@@ -419,7 +405,7 @@ abstract class StreamWrapper {
    * @return bool
    *   TRUE if resource permissions were successfully modified.
    *
-   * Always returns TRUE. (not supported)
+   *   Always returns TRUE. (not supported)
    *
    * @see http://php.net/manual/en/streamwrapper.chmod.php
    */
@@ -428,11 +414,12 @@ abstract class StreamWrapper {
   }
 
   /**
-   * Trigger one or more errors
+   * Trigger one or more errors.
    *
    * @param \Exception|\Exception[] $exceptions
-   * @param mixed $flags If set to STREAM_URL_STAT_QUIET, then no error or
-   *   exception occurs
+   * @param mixed $flags
+   *   If set to STREAM_URL_STAT_QUIET, then no error or
+   *   exception occurs.
    *
    * @return bool
    */
@@ -461,11 +448,12 @@ abstract class StreamWrapper {
    * Helper function to prepare a url_stat result array.
    * All files and folders will be returned with 0777 permission.
    *
-   * @param string|array $result Data to add
-   *  - Null or String for Folders
-   *  - Array for Files with the following keyed values:
+   * @param string|array $result
+   *   Data to add
+   *   - Null or String for Folders
+   *   - Array for Files with the following keyed values:
    *    - 'timestamp': the creation/modification timestamp
-   *    - 'filesize': the file dimensions
+   *    - 'filesize': the file dimensions.
    *
    * @return array Returns the modified url_stat result
    */
@@ -500,19 +488,20 @@ abstract class StreamWrapper {
     ];
     $stat = $statTemplate;
     $type = gettype($result);
-    // Determine what type of data is being cached
+    // Determine what type of data is being cached.
     if ($type == 'NULL' || $type == 'string') {
       // Directory with 0777 access - see "man 2 stat".
       $stat['mode'] = $stat[2] = 0040777;
     }
     elseif ($type == 'array' && isset($result['timestamp'])) {
-      // ListObjects or HeadObject result
+      // ListObjects or HeadObject result.
       $stat['mtime'] = $stat[9] = $stat['ctime'] = $stat[10] = $result['timestamp'];
-      // $stat['atime'] = $stat[8] = $result['timestamp'];
+      // $stat['atime'] = $stat[8] = $result['timestamp'];.
       $stat['size'] = $stat[7] = $result['filesize'];
       // Regular file with 0777 access - see "man 2 stat".
       $stat['mode'] = $stat[2] = 0100777;
     }
     return $stat;
   }
+
 }

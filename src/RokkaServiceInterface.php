@@ -2,58 +2,55 @@
 
 namespace Drupal\rokka;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\rokka\RokkaAdapter\SourceImageMetadata;
-
 /**
  * Rokka service interface.
  */
-interface RokkaServiceInterface
-{
-    /**
-     * Return the given setting from the Rokka module configuration.
-     *
-     * Examples:
-     * - source_image_style (default: , 'rokka_source')
-     * - use_hash_as_name (default: true)
-     *
-     * @param string $param
-     *
-     * @return mixed
-     */
-    public function getSettings($param);
+interface RokkaServiceInterface {
 
-    /**
-     * @return \Rokka\Client\Image
-     */
-    public function getRokkaImageClient();
+  /**
+   * Return the given setting from the Rokka module configuration.
+   *
+   * Examples:
+   * - source_image_style (default: , 'rokka_source')
+   * - use_hash_as_name (default: true)
+   *
+   * @param string $param
+   *
+   * @return mixed
+   */
+  public function getSettings($param);
 
-    /**
-     * @return \Rokka\Client\User
-     */
-    public function getRokkaUserClient();
+  /**
+   * @return \Rokka\Client\Image
+   */
+  public function getRokkaImageClient();
 
-    /**
-     * Get an image, given the URI.
-     *
-     * @param string $uri
-     *
-     * @return SourceImageMetadata
-     */
-    public function loadRokkaMetadataByUri($uri);
+  /**
+   * @return \Rokka\Client\User
+   */
+  public function getRokkaUserClient();
 
-    /**
-     * Counts the number of images that share the same Hash.
-     *
-     * @param string $hash
-     *
-     * @return int
-     */
-    public function countImagesWithHash($hash);
+  /**
+   * Get an image, given the URI.
+   *
+   * @param string $uri
+   *
+   * @return \Drupal\rokka\RokkaAdapter\SourceImageMetadata
+   */
+  public function loadRokkaMetadataByUri($uri);
 
-    /**
-     * @return EntityTypeManagerInterface
-    */
-    public function getEntityManager();
+  /**
+   * Counts the number of images that share the same Hash.
+   *
+   * @param string $hash
+   *
+   * @return int
+   */
+  public function countImagesWithHash($hash);
 
-  }
+  /**
+   * @return \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  public function getEntityManager();
+
+}

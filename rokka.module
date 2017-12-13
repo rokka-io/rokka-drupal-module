@@ -1,20 +1,23 @@
 <?php
 
+/**
+ * @file
+ */
+
+use Rokka\Client\UriHelper;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\rokka\Entity\RokkaStack;
-use Drupal\rokka\StyleEffects\InterfaceEffectImage;
 use GuzzleHttp\Psr7\Uri;
 use Rokka\Client\Core\Stack;
-use Rokka\Client\Core\StackOperation;
 
 /**
  * Implements hook_ENTITY_TYPE_presave().
  *
  * @param \Drupal\image\Entity\ImageStyle $entity
+ *
  * @throws \GuzzleHttp\Exception\GuzzleException
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
  */
-
 function rokka_image_style_presave(ImageStyle $entity) {
   /** @var \Drupal\rokka\RokkaService $rokkaService */
   $rokkaService = \Drupal::service('rokka.service');
@@ -33,14 +36,14 @@ function rokka_image_style_presave(ImageStyle $entity) {
   }
   if ($stackOptionsForm['rokka_autoformat'] === 'none') {
     unset($stackOptions['autoformat']);
-  } else  {
+  }
+  else {
     $stackOptions['autoformat'] = $stackOptionsForm['rokka_autoformat'];
   }
-  $stack = new Stack( $rokkaService->getRokkaOrganizationName(), $entity->getName(), $effectStack, $stackOptions);
-  $remoteStack = $client->saveStack($stack, ['overwrite' => true]);
+  $stack = new Stack($rokkaService->getRokkaOrganizationName(), $entity->getName(), $effectStack, $stackOptions);
+  $remoteStack = $client->saveStack($stack, ['overwrite' => TRUE]);
   // Create the config entity object.
   $entity_manager = $rokkaService->getEntityManager();
-  //FIXME: this is always null, why?
   $rokkaStack = $entity_manager->getStorage('rokka_stack')->load($entity->getName());
 
   if ($rokkaStack instanceof RokkaStack) {
@@ -53,7 +56,7 @@ function rokka_image_style_presave(ImageStyle $entity) {
       'organization' => $remoteStack->organization,
       'stackOperations' => $remoteStack->stackOperations,
       'stackOptions' => $remoteStack->stackOptions,
-      'label' => $remoteStack->name
+      'label' => $remoteStack->name,
     ]);
   }
   $rokkaStack->enforceIsNew(FALSE);
@@ -66,7 +69,7 @@ function rokka_image_style_presave(ImageStyle $entity) {
 /**
  * @param array $effects
  *
- * @return StackOperation[]
+ * @return \Rokka\Client\Core\StackOperation[]
  */
 function rokka_buildStackOperationCollection($effects) {
   if (empty($effects)) {
@@ -100,7 +103,7 @@ function rokka_buildStackOperationCollection($effects) {
 /**
  * @param array $effect
  *
- * @return StackOperation[]
+ * @return \Rokka\Client\Core\StackOperation[]
  */
 function rokka_buildStackOperation(array $effect) {
   $name = $effect['id'];
@@ -108,22 +111,22 @@ function rokka_buildStackOperation(array $effect) {
 
   $ret = [];
   if (class_exists($className) && in_array('Drupal\rokka\StyleEffects\InterfaceEffectImage', class_implements($className))) {
-    /** @var InterfaceEffectImage $className */
+    /** @var \Drupal\rokka\StyleEffects\InterfaceEffectImage $className */
     $ret = $className::buildRokkaStackOperation($effect['data']);
   }
   else {
-    //    watchdog('rokka', 'Can not convert effect "%effect" to Rokka.io StackOperation: "%class" Class missing!', array(
+    // watchdog('rokka', 'Can not convert effect "%effect" to Rokka.io StackOperation: "%class" Class missing!', array(
     //      '%effect' => $name,
     //      '%class' => $className,
-    //    ));
+    //    ));.
   }
 
   return $ret;
 }
 
 /**
- * @param ImageStyle $imageStyle
- * @return StackOperation[]
+ * @param \Drupal\image\Entity\ImageStyle $imageStyle
+ * @return \Rokka\Client\Core\StackOperation[]
  */
 function rokka_getEffectStack(ImageStyle $imageStyle) {
 
@@ -138,10 +141,10 @@ function rokka_getEffectStack(ImageStyle $imageStyle) {
  * @return string
  */
 function rokka_camelCase($str, $classCase = FALSE) {
-  // non-alpha and non-numeric characters become spaces
+  // non-alpha and non-numeric characters become spaces.
   $str = preg_replace('/[^a-z0-9]+/i', ' ', $str);
   $str = trim($str);
-  // uppercase the first character of each word
+  // Uppercase the first character of each word.
   $str = ucwords($str);
   $str = str_replace(' ', '', $str);
   if (!$classCase) {
@@ -158,20 +161,19 @@ function rokka_camelCase($str, $classCase = FALSE) {
 function rokka_preprocess_image_style_preview(&$variables) {
   $preview_url = $variables['derivative']['url'];
   $previewUri = new Uri($preview_url);
-  $components = Rokka\Client\UriHelper::decomposeUri($previewUri);
+  $components = UriHelper::decomposeUri($previewUri);
   /** @var \Drupal\rokka\RokkaService $rokkaService */
   $rokkaService = \Drupal::service('rokka.service');
   if ($components['stack'] !== 'dynamic') {
     $client = $rokkaService->getRokkaImageClient();
   }
- /** @var ImageStyle $imageStyle */
- $imageStyle = $rokkaService->getEntityManager()->getStorage('image_style')->load($components['stack']);
- /** @var RokkaStack $stackEntity */
- $stackEntity = $rokkaService->getEntityManager()->getStorage('rokka_stack')->load($components['stack']);
-
+  /** @var \Drupal\image\Entity\ImageStyle $imageStyle */
+  $imageStyle = $rokkaService->getEntityManager()->getStorage('image_style')->load($components['stack']);
+  /** @var \Drupal\rokka\Entity\RokkaStack $stackEntity */
+  $stackEntity = $rokkaService->getEntityManager()->getStorage('rokka_stack')->load($components['stack']);
 
   $effectStack = rokka_getEffectStack($imageStyle);
-  $stack = new Stack(null, $components['stack'], $effectStack);
+  $stack = new Stack(NULL, $components['stack'], $effectStack);
   if ($stackEntity instanceof  RokkaStack) {
     $stackOptions = $stackEntity->getStackOptions();
     if (is_array($stackOptions)) {
@@ -180,17 +182,18 @@ function rokka_preprocess_image_style_preview(&$variables) {
   }
   $dynamicStack = $stack->getDynamicStackUrl();
   $components['stack'] = $dynamicStack;
-  $preview_url = \Rokka\Client\UriHelper::composeUri($components, $previewUri);
+  $preview_url = UriHelper::composeUri($components, $previewUri);
   $variables['derivative']['rendered']['#uri'] = $preview_url;
   $variables['derivative']['url'] = $preview_url;
-  //we have to get the image from rokka to know its dimensions
+  // We have to get the image from rokka to know its dimensions
   // that makes is a little bit slower, if anyone has a better idea..
   $image = @file_get_contents($preview_url);
-  if ($image !== false) {
+  if ($image !== FALSE) {
     $dimensions = rokka_getImageDimensionsFromContent($image);
     $variables['derivative']['width'] = $dimensions['width'];
     $variables['derivative']['height'] = $dimensions['height'];
-  } else {
+  }
+  else {
     $variables['derivative']['width'] = 'unknown ';
     $variables['derivative']['height'] = 'unknown ';
   }
@@ -203,22 +206,25 @@ function rokka_preprocess_image_style_preview(&$variables) {
  * easy accessible way. We do it here from the FILEINFO_RAW string and some regex magic.
  *
  * @param string $content
+ *
  * @return array
  */
-function rokka_getImageDimensionsFromContent(string $content)
-{
+function rokka_getImageDimensionsFromContent(string $content) {
   $answer = finfo_buffer(finfo_open(FILEINFO_RAW), $content);
   if (preg_match('/, *([0-9]{1,6}) *x *([0-9]{1,6})/', $answer, $matches)) {
     return ['width' => (int) $matches[1], 'height' => (int) $matches[2]];
   }
 
-  return ['width' => null, 'height' => null];
+  return ['width' => NULL, 'height' => NULL];
 }
+
 /**
  * Implements hook_ENTITY_TYPE_delete().
  *
  * @param \Drupal\image\Entity\ImageStyle $entity
+ *
  * @return bool
+ *
  * @throws \GuzzleHttp\Exception\GuzzleException
  */
 function rokka_image_style_delete(ImageStyle $entity) {
@@ -232,12 +238,13 @@ function rokka_image_style_delete(ImageStyle $entity) {
       ->delete();
 
     return $client->deleteStack($entity->getName());
-  } catch (Exception $e) {
+  }
+  catch (Exception $e) {
     // If the Stack is not found, that means that it is already deleted.
     if (404 === $e->getCode()) {
       return TRUE;
     }
-    //    // If an exception is raised, no ImageStack could be deleted.
+    // // If an exception is raised, no ImageStack could be deleted.
     //    watchdog('rokka', 'Exception while deleting ImageStack "%name" in "%function": error: "%error"', array(
     //      '%name' => $name,
     //      '%function' => __FUNCTION__,
@@ -250,9 +257,11 @@ function rokka_image_style_delete(ImageStyle $entity) {
 
 /**
  * Implements hook_form_FORM_ID_alter().
+ *
  * @param $form
  * @param \Drupal\Core\Form\FormState $form_state
  * @param $form_id
+ *
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
  */
 function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
@@ -260,11 +269,12 @@ function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
   $form_object = $form_state->getFormObject();
   /** @var \Drupal\rokka\RokkaService $rokkaService */
   $rokkaService = \Drupal::service('rokka.service');
-  /** @var RokkaStack $stackEntity */
+  /** @var \Drupal\rokka\Entity\RokkaStack $stackEntity */
   $stackEntity = $rokkaService->getEntityManager()->getStorage('rokka_stack')->load($form_object->getEntity()->get("name"));
   if ($stackEntity instanceof  RokkaStack) {
     $stackOptions = $stackEntity->getStackOptions();
-  } else {
+  }
+  else {
     $stackOptions = [];
   }
   $userInput = $form_state->getUserInput();
@@ -286,10 +296,9 @@ function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
     '#required' => FALSE,
     '#default_value' => 0,
     '#min' => 0,
-    '#max' => 100
+    '#max' => 100,
   ];
   rokka_setValueForField('rokka_jpg_quality', 'jpg.quality', $form, $userInput, $stackOptions);
-
 
   $form['rokka_stack_options']['rokka_webp_quality'] = [
     '#type' => 'textfield',
@@ -311,17 +320,15 @@ function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
     '#description' => t('If set, rokka delivers the best format supported by the browser.'),
     '#required' => FALSE,
     '#default_value' => 'none',
-    '#options' => array(
+    '#options' => [
       'true' => t('True'),
       'false' => t('False'),
-      'none' => t('Rokka default (false)')
-    )
-
+      'none' => t('Rokka default (false)'),
+    ],
 
   ];
 
   rokka_setValueForField('rokka_autoformat', 'autoformat', $form, $userInput, $stackOptions);
-
 
 }
 
@@ -334,17 +341,19 @@ function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
  */
 function rokka_setValueForField($formFieldName, $stackOptionName, &$form, $userInput, $stackOptions) {
   if (isset($userInput['rokka_stack_options'][$formFieldName])) {
-     $form['rokka_stack_options'][$formFieldName]['#value'] = $userInput['rokka_stack_options'][$formFieldName];
+    $form['rokka_stack_options'][$formFieldName]['#value'] = $userInput['rokka_stack_options'][$formFieldName];
   }
-  else if (isset($stackOptions[$stackOptionName])) {
-   if ($stackOptions[$stackOptionName] === true) {
-     $form['rokka_stack_options'][$formFieldName]['#value'] = 'true';
-   } else if ($stackOptions[$stackOptionName] === false) {
-     $form['rokka_stack_options'][$formFieldName]['#value'] = 'false';
-   } else {
-     $form['rokka_stack_options'][$formFieldName]['#value'] = $stackOptions[$stackOptionName];
+  elseif (isset($stackOptions[$stackOptionName])) {
+    if ($stackOptions[$stackOptionName] === TRUE) {
+      $form['rokka_stack_options'][$formFieldName]['#value'] = 'true';
+    }
+    elseif ($stackOptions[$stackOptionName] === FALSE) {
+      $form['rokka_stack_options'][$formFieldName]['#value'] = 'false';
+    }
+    else {
+      $form['rokka_stack_options'][$formFieldName]['#value'] = $stackOptions[$stackOptionName];
 
-   }
+    }
   }
   if (isset($form['rokka_stack_options'][$formFieldName]['#value'])) {
     $form['rokka_stack_options'][$formFieldName]['#default_value'] = $form['rokka_stack_options'][$formFieldName]['#value'];

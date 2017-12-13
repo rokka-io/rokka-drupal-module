@@ -8,4 +8,3 @@ entity.rokka_stack.add_form:
   title: 'Add Rokka stack'
   appears_on:
     - entity.rokka_stack.collection
-

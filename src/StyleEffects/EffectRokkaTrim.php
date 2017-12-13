@@ -4,13 +4,19 @@ namespace Drupal\rokka\StyleEffects;
 
 use Rokka\Client\Core\StackOperation;
 
+/**
+ *
+ */
 class EffectRokkaTrim implements InterfaceEffectImage {
 
+  /**
+   *
+   */
   public static function buildRokkaStackOperation($data) {
-    $options = array(
+    $options = [
       'fuzzy' => static::normalizePercent($data['fuzzy']),
-    );
-    return array(new StackOperation('trim', $options));
+    ];
+    return [new StackOperation('trim', $options)];
   }
 
   /**
@@ -21,4 +27,5 @@ class EffectRokkaTrim implements InterfaceEffectImage {
     $value = $value ? $value : 0;
     return min(100, max(0, $value));
   }
+
 }

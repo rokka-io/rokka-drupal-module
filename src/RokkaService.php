@@ -3,9 +3,7 @@
 namespace Drupal\rokka;
 
 use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Entity\EntityStorageBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\rokka\RokkaAdapter\SourceImageMetadata;
 use Psr\Log\LoggerInterface;
 use Rokka\Client\Base;
 use Rokka\Client\Factory;
@@ -17,12 +15,12 @@ use Rokka\Client\TemplateHelper;
 class RokkaService implements RokkaServiceInterface {
 
   /**
-   * @var LoggerInterface
+   * @var \Psr\Log\LoggerInterface
    */
   private $logger;
 
   /**
-   * @var ConfigFactory
+   * @var \Drupal\Core\Config\ConfigFactory
    */
   private $configFactory;
 
@@ -34,16 +32,16 @@ class RokkaService implements RokkaServiceInterface {
   private $apiEndpoint;
 
   /**
-   * @var EntityTypeManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   private $entityManager;
 
   /**
    * RokkaService constructor.
    *
-   * @param EntityTypeManagerInterface $em
-   * @param ConfigFactory $configFactory
-   * @param LoggerInterface $logger
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $em
+   * @param \Drupal\Core\Config\ConfigFactory $configFactory
+   * @param \Psr\Log\LoggerInterface $logger
    *
    * @internal param string $apiKey
    * @internal param string $organizationName
@@ -109,10 +107,10 @@ class RokkaService implements RokkaServiceInterface {
     /*
     $q = new \EntityFieldQuery();
     $q->entityCondition('entity_type', 'rokka_metadata')
-        ->propertyCondition('hash', $hash)
-        ->range(null, 2);
+    ->propertyCondition('hash', $hash)
+    ->range(null, 2);
     $metas = $q->execute();
-    */
+     */
   }
 
   /**
@@ -135,19 +133,20 @@ class RokkaService implements RokkaServiceInterface {
    * Returns the SEO compliant filename for the given image name.
    *
    * @param string $filename
+   *
    * @return string
    */
-  public static function cleanRokkaSeoFilename($filename)
-  {
+  public static function cleanRokkaSeoFilename($filename) {
     // Rokka.io accepts SEO URL part as "[a-z0-9-]" only, remove not valid
-    // characters and replace them with '-'
+    // characters and replace them with '-'.
     return TemplateHelper::slugify($filename);
   }
 
   /**
-   * @return EntityTypeManagerInterface
+   * @return \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   public function getEntityManager() {
     return $this->entityManager;
   }
+
 }

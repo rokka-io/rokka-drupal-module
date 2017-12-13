@@ -11,9 +11,7 @@ use Drupal\user\EntityOwnerInterface;
  *
  * @ingroup rokka
  */
-interface RokkaMetadataInterface extends  ContentEntityInterface, EntityChangedInterface, EntityOwnerInterface {
-
-  // Add get/set methods for your configuration properties here.
+interface RokkaMetadataInterface extends ContentEntityInterface, EntityChangedInterface, EntityOwnerInterface {
 
   /**
    * Gets the Rokka Metadata name.
@@ -67,7 +65,8 @@ interface RokkaMetadataInterface extends  ContentEntityInterface, EntityChangedI
    * Sets the published status of a Rokka Metadata.
    *
    * @param bool $published
-   *   TRUE to set this Rokka Metadata to published, FALSE to set it to unpublished.
+   *   TRUE to set this Rokka Metadata to published,
+   *   FALSE to set it to unpublished.
    *
    * @return \Drupal\rokka\Entity\RokkaMetadataInterface
    *   The called Rokka Metadata entity.

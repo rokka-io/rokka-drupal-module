@@ -25,4 +25,3 @@ entity.rokka_stack.collection:
   description: 'List Rokka stack (bundles)'
   parent: system.admin_structure
   weight: 99
-

@@ -2,10 +2,7 @@
 
 namespace Drupal\rokka\Entity;
 
-use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
-use Drupal\Core\Entity\Annotation\ConfigEntityType;
-use Rokka\Client\Core\StackOperation;
 
 /**
  * Defines the Rokka stack entity.
@@ -73,7 +70,7 @@ class RokkaStack extends ConfigEntityBase implements RokkaStackInterface {
   /**
    * The Rokka stack operations.
    *
-   * @var StackOperation[]
+   * @var \Rokka\Client\Core\StackOperation[]
    */
   protected $stackOperations;
 
@@ -85,10 +82,11 @@ class RokkaStack extends ConfigEntityBase implements RokkaStackInterface {
   protected $uuid;
 
   /**
+   * The label of this stack.
+   *
    * @var string
    */
   protected $label;
-
 
   /**
    * {@inheritdoc}
@@ -101,8 +99,13 @@ class RokkaStack extends ConfigEntityBase implements RokkaStackInterface {
   }
 
   /**
+   * Replace . with __ in stackOptions.
+   *
    * @param array $values
+   *   The to be replaces values.
+   *
    * @return array
+   *   The replaced array
    */
   protected static function deDotStackOptions(array $values): array {
     foreach ($values as $key => $value) {
@@ -114,6 +117,15 @@ class RokkaStack extends ConfigEntityBase implements RokkaStackInterface {
     return $values;
   }
 
+  /**
+   * Replace __ with . in stackOptions.
+   *
+   * @param array $values
+   *   The to be replaces values.
+   *
+   * @return array
+   *   The replaced array
+   */
   protected static function dotStackOptions(array $values): array {
     foreach ($values as $key => $value) {
       if (strpos($key, "__") !== FALSE) {
@@ -124,28 +136,44 @@ class RokkaStack extends ConfigEntityBase implements RokkaStackInterface {
     return $values;
   }
 
-  public function setStackOptions($options) {
+  /**
+   * Set Stack options.
+   *
+   * @param array $options
+   *   The options.
+   */
+  public function setStackOptions(array $options) {
     $this->stackOptions = self::deDotStackOptions($options);
   }
 
   /**
+   * Get stack options.
+   *
    * @return array
+   *   The options.
    */
   public function getStackOptions(): array {
     return self::dotStackOptions($this->stackOptions);
   }
 
   /**
+   * Get organization.
+   *
    * @return string
+   *   The organization
    */
   public function getOrganization(): string {
     return $this->organization;
   }
 
   /**
+   * Set organization.
+   *
    * @param string $organization
+   *   The organization.
    */
   public function setOrganization(string $organization) {
     $this->organization = $organization;
   }
+
 }

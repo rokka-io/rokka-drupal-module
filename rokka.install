@@ -1,19 +1,23 @@
 <?php
-//
-///**
+
+/**
+ * @file
+ */
+
+// **
 // * @file
 // * Install, update and uninstall functions for the Rokka module.
 // */
 //
-///**
+// **
 // * Implements hook_install().
 // */
-//function rokka_install() {}
+// function rokka_install() {}
 //
-///**
+// **
 // * Implements hook_uninstall().
 // */
-//function rokka_uninstall() {
+// function rokka_uninstall() {
 //  $variables = [
 //    'rokka_api_base_url',
 //    'rokka_api_key',
@@ -27,12 +31,12 @@
 //  foreach($variables as $variable) {
 //    variable_del($variable);
 //  }
-//}
+// }
 //
-///**
+// **
 // * Implements hook_schema().
 // */
-//function rokka_schema() {
+// function rokka_schema() {
 //  $schema['rokka_metadata'] = [
 //    'description' => 'Stores Rokka.io files hashes.',
 //    'fields' => [
@@ -110,12 +114,12 @@
 //  ];
 //
 //  return $schema;
-//}
+// }
 //
-///**
+// **
 // * Add the RokkaStack table.
 // */
-//function rokka_update_7002() {
+// function rokka_update_7002() {
 //  $schema['rokka_stack'] = [
 //    'description' => 'Stores Rokka.io Stack info.',
 //    'fields' => [
@@ -146,12 +150,12 @@
 //    ],
 //  ];
 //  db_create_table('rokka_stack', $schema['rokka_stack']);
-//}
-///**
+// }
+// **
 // * Remove RokkaMetadata table index on fid field (not used).
 // */
-//function rokka_update_7001() {
+// function rokka_update_7001() {
 //  if (db_index_exists('rokka_metadata', 'fid')) {
 //    db_drop_index('rokka_metadata', 'fid');
 //  }
-//}
+// }.
