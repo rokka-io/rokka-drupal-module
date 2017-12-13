@@ -55,6 +55,7 @@ function rokka_image_style_presave(ImageStyle $entity) {
       'organization' => $remoteStack->organization,
       'stackOperations' => $remoteStack->stackOperations,
       'stackOptions' => $remoteStack->stackOptions,
+      'label' => $remoteStack->name
     ]);
   }
   $rokkaStack->enforceIsNew(FALSE);

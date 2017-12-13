@@ -30,6 +30,7 @@ use Rokka\Client\Core\StackOperation;
  *   entity_keys = {
  *     "id" = "id",
  *     "uuid" = "uuid",
+ *     "label" = "label"
  *   },
  *   links = {
  *     "canonical" = "/admin/structure/rokka_stack/{rokka_stack}",
@@ -41,7 +42,8 @@ use Rokka\Client\Core\StackOperation;
  *   config_export = {
  *     "organization",
  *     "stackOptions",
- *     "id"
+ *     "id",
+ *     "label"
  *   }
  * )
  */
@@ -81,6 +83,11 @@ class RokkaStack extends ConfigEntityBase implements RokkaStackInterface {
    * @var string
    */
   protected $uuid;
+
+  /**
+   * @var string
+   */
+  protected $label;
 
 
   /**
