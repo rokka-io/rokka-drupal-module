@@ -128,8 +128,11 @@ function rokka_buildStackOperation(array $effect) {
  * @param \Drupal\image\Entity\ImageStyle $imageStyle
  * @return \Rokka\Client\Core\StackOperation[]
  */
-function rokka_getEffectStack(ImageStyle $imageStyle) {
+function rokka_getEffectStack(ImageStyle $imageStyle = null) {
 
+  if ($imageStyle === null) {
+    return [];
+  }
   return !empty(rokka_buildStackOperationCollection($imageStyle->getEffects()
     ->getConfiguration())) ? rokka_buildStackOperationCollection($imageStyle->getEffects()
     ->getConfiguration()) : [];

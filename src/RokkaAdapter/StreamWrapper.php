@@ -291,10 +291,32 @@ abstract class StreamWrapper {
       // Reading the original source image contents and saving it in a memory-temp
       // file to be able to create a Stream from it (the source image file can't
       // be accessed directly via a specific URL).
-      $sourceStream = fopen('php://temp', 'r+');
-      fwrite($sourceStream, self::$imageClient->getSourceImageContents($meta->getHash()));
-      rewind($sourceStream);
+      $hash = $meta->getHash();
+      $cache = \Drupal::cache();
 
+      $key = 'sourceimage_' . $hash;
+      //FIXME: We have a problem with big source images for some reason on mysql default stuff..
+      try {
+        $content = $cache->get($key);
+      }
+      catch (\Exception $e) {
+        $content = FALSE;
+      }
+      if ($content === FALSE) {
+        $content = self::$imageClient->getSourceImageContents($hash);
+        try {
+          $cache->set($key, $content, time() + 24 * 3600);
+        }
+        catch (\Exception $e) {
+        }
+      }
+      else {
+        $content = $content->data;
+      }
+
+      $sourceStream = fopen('php://temp', 'r+');
+      fwrite($sourceStream, $content);
+      rewind($sourceStream);
       $this->body = new Stream($sourceStream, 'rb');
 
       // Wrap the body in a caching entity body if seeking is allowed.
