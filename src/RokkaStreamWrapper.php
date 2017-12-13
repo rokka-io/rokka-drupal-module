@@ -2,11 +2,9 @@
 
 namespace Drupal\rokka;
 
-use Drupal\Core\Entity\Entity;
 use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\rokka\Entity\RokkaMetadata;
-use Drupal\rokka\RokkaAdapter\SourceImageMetadata;
 use Drupal\rokka\RokkaAdapter\StreamWrapper;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\Log\LoggerInterface;
