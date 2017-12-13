@@ -2,6 +2,7 @@
 
 namespace Drupal\rokka;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\rokka\RokkaAdapter\SourceImageMetadata;
 
 /**
@@ -49,4 +50,10 @@ interface RokkaServiceInterface
      * @return int
      */
     public function countImagesWithHash($hash);
-}
+
+    /**
+     * @return EntityTypeManagerInterface
+    */
+    public function getEntityManager();
+
+  }
