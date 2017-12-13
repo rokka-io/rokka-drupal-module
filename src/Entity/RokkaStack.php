@@ -2,7 +2,10 @@
 
 namespace Drupal\rokka\Entity;
 
+use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\Entity\Annotation\ConfigEntityType;
+use Rokka\Client\Core\StackOperation;
 
 /**
  * Defines the Rokka stack entity.
@@ -25,10 +28,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *   config_prefix = "rokka_stack",
  *   admin_permission = "administer site configuration",
  *   entity_keys = {
- *     "name" = "id",
- *     "organization" = "organization",
- *     "options" = "stackOptions",
- *     "operations" = "stackOperations",
+ *     "id" = "id",
  *     "uuid" = "uuid",
  *   },
  *   links = {
@@ -37,6 +37,11 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "edit-form" = "/admin/structure/rokka_stack/{rokka_stack}/edit",
  *     "delete-form" = "/admin/structure/rokka_stack/{rokka_stack}/delete",
  *     "collection" = "/admin/structure/rokka_stack"
+ *   },
+ *   config_export = {
+ *     "organization",
+ *     "stackOptions",
+ *     "id"
  *   }
  * )
  */
@@ -66,7 +71,7 @@ class RokkaStack extends ConfigEntityBase implements RokkaStackInterface {
   /**
    * The Rokka stack operations.
    *
-   * @var array
+   * @var StackOperation[]
    */
   protected $stackOperations;
 
@@ -77,4 +82,63 @@ class RokkaStack extends ConfigEntityBase implements RokkaStackInterface {
    */
   protected $uuid;
 
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(array $values = []) {
+    if (isset($values['stackOptions'])) {
+      $values['stackOptions'] = self::deDotStackOptions($values['stackOptions']);
+    }
+    return parent::create($values);
+  }
+
+  /**
+   * @param array $values
+   * @return array
+   */
+  protected static function deDotStackOptions(array $values): array {
+    foreach ($values as $key => $value) {
+      if (strpos($key, ".") !== FALSE) {
+        $values[str_replace(".", "__", $key)] = $value;
+        unset($values[$key]);
+      }
+    }
+    return $values;
+  }
+
+  protected static function dotStackOptions(array $values): array {
+    foreach ($values as $key => $value) {
+      if (strpos($key, "__") !== FALSE) {
+        $values[str_replace("__", ".", $key)] = $value;
+        unset($values[$key]);
+      }
+    }
+    return $values;
+  }
+
+  public function setStackOptions($options) {
+    $this->stackOptions = self::deDotStackOptions($options);
+  }
+
+  /**
+   * @return array
+   */
+  public function getStackOptions(): array {
+    return self::dotStackOptions($this->stackOptions);
+  }
+
+  /**
+   * @return string
+   */
+  public function getOrganization(): string {
+    return $this->organization;
+  }
+
+  /**
+   * @param string $organization
+   */
+  public function setOrganization(string $organization) {
+    $this->organization = $organization;
+  }
 }
