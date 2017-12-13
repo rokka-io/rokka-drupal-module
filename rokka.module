@@ -31,13 +31,11 @@ function rokka_image_style_presave(ImageStyle $entity) {
   if ($stackOptionsForm['rokka_webp_quality'] > 0) {
     $stackOptions['webp.quality'] = $stackOptionsForm['rokka_webp_quality'];
   }
-
-  if ($stackOptionsForm['rokka_autoformat'] === 1) {
-    $stackOptions['autoformat'] = true;
-  } else if ($stackOptionsForm['rokka_autoformat'] === 0) {
-    $stackOptions['autoformat'] = false;
+  if ($stackOptionsForm['rokka_autoformat'] === 'none') {
+    unset($stackOptions['autoformat']);
+  } else  {
+    $stackOptions['autoformat'] = $stackOptionsForm['rokka_autoformat'];
   }
-
   $stack = new Stack( $rokkaService->getRokkaOrganizationName(), $entity->getName(), $effectStack, $stackOptions);
   $remoteStack = $client->saveStack($stack, ['overwrite' => true]);
   // Create the config entity object.
@@ -308,15 +306,21 @@ function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
   rokka_setValueForField('rokka_webp_quality', 'webp.quality', $form, $userInput, $stackOptions);
 
   $form['rokka_stack_options']['rokka_autoformat'] = [
-    '#type' => 'checkbox',
+    '#type' => 'radios',
     '#title' => t('autoformat '),
     '#description' => t('If set, rokka delivers the best format supported by the browser.'),
     '#required' => FALSE,
-    '#default_value' => 1,
+    '#default_value' => 'none',
+    '#options' => array(
+      'true' => t('True'),
+      'false' => t('False'),
+      'none' => t('Rokka default (false)')
+    )
+
+
   ];
 
   rokka_setValueForField('rokka_autoformat', 'autoformat', $form, $userInput, $stackOptions);
-
 
 
 }
@@ -330,9 +334,19 @@ function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
  */
 function rokka_setValueForField($formFieldName, $stackOptionName, &$form, $userInput, $stackOptions) {
   if (isset($userInput['rokka_stack_options'][$formFieldName])) {
-    $form['rokka_stack_options'][$formFieldName]['#value'] = $userInput['rokka_stack_options'][$formFieldName];
+     $form['rokka_stack_options'][$formFieldName]['#value'] = $userInput['rokka_stack_options'][$formFieldName];
   }
   else if (isset($stackOptions[$stackOptionName])) {
-    $form['rokka_stack_options'][$formFieldName]['#value'] = $stackOptions[$stackOptionName];
+   if ($stackOptions[$stackOptionName] === true) {
+     $form['rokka_stack_options'][$formFieldName]['#value'] = 'true';
+   } else if ($stackOptions[$stackOptionName] === false) {
+     $form['rokka_stack_options'][$formFieldName]['#value'] = 'false';
+   } else {
+     $form['rokka_stack_options'][$formFieldName]['#value'] = $stackOptions[$stackOptionName];
+
+   }
+  }
+  if (isset($form['rokka_stack_options'][$formFieldName]['#value'])) {
+    $form['rokka_stack_options'][$formFieldName]['#default_value'] = $form['rokka_stack_options'][$formFieldName]['#value'];
   }
 }
