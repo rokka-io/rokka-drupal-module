@@ -9,6 +9,7 @@ use Drupal\rokka\RokkaAdapter\SourceImageMetadata;
 use Psr\Log\LoggerInterface;
 use Rokka\Client\Base;
 use Rokka\Client\Factory;
+use Rokka\Client\TemplateHelper;
 
 /**
  * Defines a RokkaService service.
@@ -133,13 +134,20 @@ class RokkaService implements RokkaServiceInterface {
   /**
    * Returns the SEO compliant filename for the given image name.
    *
-   * @param $filename
+   * @param string $filename
    * @return string
    */
   public static function cleanRokkaSeoFilename($filename)
   {
     // Rokka.io accepts SEO URL part as "[a-z0-9-]" only, remove not valid
     // characters and replace them with '-'
-    return preg_replace('@[^a-z0-9-]@', '-', strtolower($filename));
+    return TemplateHelper::slugify($filename);
+  }
+
+  /**
+   * @return EntityTypeManagerInterface
+   */
+  public function getEntityManager() {
+    return $this->entityManager;
   }
 }
