@@ -2,6 +2,7 @@
 
 namespace Drupal\rokka\RokkaAdapter;
 
+use Drupal\Component\FileSystem\RegexDirectoryIterator;
 use Drupal\rokka\Entity\RokkaMetadata;
 use GuzzleHttp\Psr7\CachingStream;
 use GuzzleHttp\Psr7\Stream;
@@ -288,36 +289,41 @@ abstract class StreamWrapper {
     }
 
     try {
-      // Reading the original source image contents and saving it in a memory-temp
-      // file to be able to create a Stream from it (the source image file can't
-      // be accessed directly via a specific URL).
       $hash = $meta->getHash();
-      $cache = \Drupal::cache();
-
       $key = 'sourceimage_' . $hash;
-      //FIXME: We have a problem with big source images for some reason on mysql default stuff..
+      // FIXME: Maybe a better way than the hand crafted, crude caching below. But I can't use one of the standard drupal caches
+      // since they are usually mysql based and will bail on large sourceimages..
+      $cachedir = 'temporary:///rokka_cache/sourceimages/';
+      $cachepath = $cachedir . $key;
       try {
-        $content = $cache->get($key);
+        $cache_exists = file_exists($cachepath);
       }
       catch (\Exception $e) {
         $content = FALSE;
       }
-      if ($content === FALSE) {
+      if ($cache_exists === FALSE) {
         $content = self::$imageClient->getSourceImageContents($hash);
         try {
-          $cache->set($key, $content, time() + 24 * 3600);
+          if (!file_exists($cachedir)) {
+            mkdir($cachedir, 0777, TRUE);
+          }
+          file_save_data($content, $cachepath, FILE_EXISTS_REPLACE);
+          // Iterate over data in that dir and clean files older than a day
+          // It's enough when we do this on save.
+          $iterator = new RegexDirectoryIterator($cachedir, "#^sourceimage_[0-9a-f]+#");
+          $ttl = 3600 * 24;
+          foreach ($iterator as $file) {
+            /** @var \Symfony\Component\Finder\SplFileInfo $file */
+            if ($file->getCTime() < time() - $ttl) {
+              unlink($file->getPathname());
+            }
+          }
         }
         catch (\Exception $e) {
         }
       }
-      else {
-        $content = $content->data;
-      }
 
-      $sourceStream = fopen('php://temp', 'r+');
-      fwrite($sourceStream, $content);
-      rewind($sourceStream);
-      $this->body = new Stream($sourceStream, 'rb');
+      $this->body = new Stream(fopen($cachepath, 'rb'));
 
       // Wrap the body in a caching entity body if seeking is allowed.
       if (!$this->body->isSeekable()) {
