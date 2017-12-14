@@ -257,9 +257,9 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
       return reset($metadata);
     }
     if (preg_match('#rokka\:.*rokka_default_image\.jpg#', $uri)) {
-      // FIXME... the default image is too large
+      // FIXME... the default image is too large.
       $hash = 'd68ef212f18f8f20130a38f31ca5e945e93446a9';
-      $hash = '2a384f375f91bc6a87a75c979b7387bfc7c93041';
+      // $hash = '2a384f375f91bc6a87a75c979b7387bfc7c93041';.
       $meta = RokkaMetadata::create(['hash' => $hash, 'filesize' => 666]);
       return $meta;
     }
@@ -276,8 +276,6 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    * @return bool
    */
   protected function doPostSourceImageDeleted(RokkaMetadata $meta) {
-    $test = 123;
-
     return $meta->delete();
   }
 
@@ -476,8 +474,6 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
     if (empty($target)) {
       return TRUE;
     }
-    $this->logger->critical(__CLASS__ . '::' . __FUNCTION__ . ' @' . $target);
-    $this->logger->critical(__CLASS__ . '::' . __FUNCTION__ . ' ' . $uri);
 
     // If not, check if the URI ends with '/' (eg: rokka://foldername/")
     return strrpos($target, '/') === (strlen($target) - 1);
