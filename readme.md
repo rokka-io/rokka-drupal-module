@@ -19,7 +19,8 @@ drush cset rokka.settings organization_name ${ROKKA_ORG} --yes
 drush cset rokka.settings api_key    ${ROKKA_KEY} --yes
 drush cset rokka.settings is_enabled true  --yes
 drush cset field.storage.node.field_image settings.uri_scheme rokka  --yes
+drush cset editor.editor.basic_html image_upload.scheme rokka --yes
+drush cset editor.editor.full_html image_upload.scheme rokka --yes
 drush cset image.settings preview_image 'rokka://rokka_default_image.jpg' --yes
-
 # set stack prefix
 ```
