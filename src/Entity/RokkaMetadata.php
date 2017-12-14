@@ -52,7 +52,9 @@ use Drupal\user\UserInterface;
  *     "delete-form" = "/admin/structure/rokka_metadata/{rokka_metadata}/delete",
  *     "collection" = "/admin/structure/rokka_metadata",
  *   },
- *   field_ui_base_route = "rokka_metadata.settings"
+ *   field_ui_base_route = "rokka_metadata.settings",
+ *   storage_schema = "Drupal\rokka\Entity\MetadataStorageSchema",
+ *
  * )
  */
 class RokkaMetadata extends ContentEntityBase implements RokkaMetadataInterface {

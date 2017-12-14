@@ -4,6 +4,7 @@
  * @file
  */
 
+use Drupal\Core\Entity\EntityInterface;
 use Rokka\Client\UriHelper;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\rokka\Entity\RokkaStack;
@@ -362,3 +363,34 @@ function rokka_setValueForField($formFieldName, $stackOptionName, &$form, $userI
     $form['rokka_stack_options'][$formFieldName]['#default_value'] = $form['rokka_stack_options'][$formFieldName]['#value'];
   }
 }
+
+
+function rokka_crop_presave($entity) {
+  if ($entity instanceof \Drupal\crop\Entity\Crop) {
+    /** @var \Drupal\Core\Image\ImageFactory $image_factory */
+    $image_factory = \Drupal::service('image.factory');
+
+    /** @var \Drupal\rokka\RokkaService $rokkaService */
+    $rokkaService = \Drupal::service('rokka.service');
+    $client = $rokkaService->getRokkaImageClient();
+
+    $fileUri = $entity->uri->value;
+    $image = $image_factory->get($fileUri);
+    // Converting the percentage-based points to pixel-based offsets, ensure non negative values.
+    $x = max(0, (int)($image->getWidth() * ($entity->x->value / 100)));
+    $y = max(0, (int)($image->getHeight() * ($entity->y->value / 100)));
+    $focusArea = new \Rokka\Client\Core\DynamicMetadata\SubjectArea($x, $y, 1, 1);
+    $metas = $rokkaService->loadRokkaMetadataByUri($fileUri);
+    foreach ($metas as $meta) {
+      $newHash = $client->setDynamicMetadata($focusArea, $meta->getHash(), null);
+      if ($newHash) {
+        // Check if the old hash has been updated
+        if ($meta->getHash() !== $newHash) {
+          $meta->hash = $newHash;
+          $meta->save();
+        }
+      }
+    }
+  }
+}
+

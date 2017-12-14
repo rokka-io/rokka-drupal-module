@@ -297,11 +297,13 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    * @see http://php.net/manual/en/streamwrapper.unlink.php
    */
   public function unlink($uri) {
+    // don't delete derivatives...
+    if (strpos($uri, 'rokka://styles/') === 0) {
+      return TRUE;
+    }
     $meta = $this->doGetMetadataFromUri($uri);
     $hash = $meta->getHash();
-
     $sharedHashesCount = $this->rokkaService->countImagesWithHash($hash);
-
     if ($sharedHashesCount > 1) {
       // If the same HASH is used elsewhere for another file..
       // Remove the Drupal image and FID, but don't remove the Rokka's image.
