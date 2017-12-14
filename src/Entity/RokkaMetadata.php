@@ -21,7 +21,7 @@ use Drupal\user\UserInterface;
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\rokka\RokkaMetadataListBuilder",
  *     "views_data" = "Drupal\rokka\Entity\RokkaMetadataViewsData",
- *
+ *     "storage_schema" = "Drupal\rokka\Entity\MetadataStorageSchema",
  *     "form" = {
  *       "default" = "Drupal\rokka\Form\RokkaMetadataForm",
  *       "add" = "Drupal\rokka\Form\RokkaMetadataForm",
@@ -53,7 +53,6 @@ use Drupal\user\UserInterface;
  *     "collection" = "/admin/structure/rokka_metadata",
  *   },
  *   field_ui_base_route = "rokka_metadata.settings",
- *   storage_schema = "Drupal\rokka\Entity\MetadataStorageSchema",
  *
  * )
  */
