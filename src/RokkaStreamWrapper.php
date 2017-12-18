@@ -263,6 +263,13 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
       $meta = RokkaMetadata::create(['hash' => $hash, 'filesize' => 666]);
       return $meta;
     }
+    if (preg_match('#rokka\:.*/default_images/#', $uri)) {
+      // FIXME... the default image is too large.
+      $hash = 'd68ef212f18f8f20130a38f31ca5e945e93446a9';
+      // $hash = '2a384f375f91bc6a87a75c979b7387bfc7c93041';.
+      $meta = RokkaMetadata::create(['hash' => $hash, 'filesize' => 666]);
+      return $meta;
+    }
     return NULL;
   }
 

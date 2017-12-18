@@ -168,13 +168,12 @@ function rokka_preprocess_image_style_preview(&$variables) {
   $components = UriHelper::decomposeUri($previewUri);
   /** @var \Drupal\rokka\RokkaService $rokkaService */
   $rokkaService = \Drupal::service('rokka.service');
-  if ($components['stack'] !== 'dynamic') {
-    $client = $rokkaService->getRokkaImageClient();
-  }
+
+  $stackUri = $components->getStack();
   /** @var \Drupal\image\Entity\ImageStyle $imageStyle */
-  $imageStyle = $rokkaService->getEntityManager()->getStorage('image_style')->load($components['stack']);
+  $imageStyle = $rokkaService->getEntityManager()->getStorage('image_style')->load($stackUri->getName());
   /** @var \Drupal\rokka\Entity\RokkaStack $stackEntity */
-  $stackEntity = $rokkaService->getEntityManager()->getStorage('rokka_stack')->load($components['stack']);
+  $stackEntity = $rokkaService->getEntityManager()->getStorage('rokka_stack')->load($stackUri->getName());
 
   $effectStack = rokka_getEffectStack($imageStyle);
   $stack = new Stack(NULL, $components['stack'], $effectStack);
@@ -184,11 +183,11 @@ function rokka_preprocess_image_style_preview(&$variables) {
       $stack->setStackOptions($stackOptions);
     }
   }
-  $dynamicStack = $stack->getDynamicStackUrl();
-  $components['stack'] = $dynamicStack;
+  $dynamicStack = $stack->getDynamicUri();
+  $components->setStack($dynamicStack);
   $preview_url = UriHelper::composeUri($components, $previewUri);
-  $variables['derivative']['rendered']['#uri'] = $preview_url;
-  $variables['derivative']['url'] = $preview_url;
+  $variables['derivative']['rendered']['#uri'] = (string) $preview_url;
+  $variables['derivative']['url'] = (string)  $preview_url;
   // We have to get the image from rokka to know its dimensions
   // that makes is a little bit slower, if anyone has a better idea..
   $image = @file_get_contents($preview_url);
