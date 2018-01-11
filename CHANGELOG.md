@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 ### Removed
 ### Fixed
+- Fix composer.json type, use "drupal-module"
 
 ## [7.x-1.2](https://www.drupal.org/project/rokka/releases/7.x-1.2)
 ### Fixed
