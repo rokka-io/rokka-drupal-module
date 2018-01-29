@@ -35,7 +35,7 @@ function rokka_image_style_presave(ImageStyle $entity) {
   if ($stackOptionsForm['rokka_webp_quality'] > 0) {
     $stackOptions['webp.quality'] = $stackOptionsForm['rokka_webp_quality'];
   }
-  if ($stackOptionsForm['rokka_autoformat'] === 'none') {
+  if ($stackOptionsForm['rokka_autoformat'] === 'none' || $stackOptionsForm['rokka_autoformat'] === null) {
     unset($stackOptions['autoformat']);
   }
   else {
