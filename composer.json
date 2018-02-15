@@ -18,8 +18,8 @@
         }
     ],
     "require": {
-        "php": ">=5.6.0 || ^7.0",
-        "rokka/client": "dev-templatehelper-from-multiple-operations as 1.2.0-dev"
+        "php": "^7.0",
+        "rokka/client": "dev-templatehelper-from-refactoring-stack as 1.2.0-dev"
     },
     "autoload": {
         "psr-4": {
