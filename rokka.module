@@ -76,7 +76,7 @@ function rokka_buildStackOperationCollection($effects) {
   if (empty($effects)) {
     $effects = [
       [
-        'name' => 'noop',
+        'id' => 'noop',
         'data' => NULL,
       ],
     ];
