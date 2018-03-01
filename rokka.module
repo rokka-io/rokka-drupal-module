@@ -166,6 +166,10 @@ function rokka_preprocess_image_style_preview(&$variables) {
   $preview_url = $variables['derivative']['url'];
   $previewUri = new Uri($preview_url);
   $components = UriHelper::decomposeUri($previewUri);
+
+  if ($components === null) {
+    return;
+  }
   /** @var \Drupal\rokka\RokkaService $rokkaService */
   $rokkaService = \Drupal::service('rokka.service');
 
