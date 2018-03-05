@@ -367,7 +367,12 @@ function rokka_setValueForField($formFieldName, $stackOptionName, &$form, $userI
   }
 }
 
-
+/**
+ * Implements hook_crop_presave.
+ *
+ * Save focalpoint data as dynamic metadata to rokka.
+ *
+ */
 function rokka_crop_presave($entity) {
   if ($entity instanceof \Drupal\crop\Entity\Crop) {
     /** @var \Drupal\rokka\RokkaService $rokkaService */
@@ -380,7 +385,7 @@ function rokka_crop_presave($entity) {
     $focusArea = new \Rokka\Client\Core\DynamicMetadata\SubjectArea($x, $y, 1, 1);
     $metas = $rokkaService->loadRokkaMetadataByUri($fileUri);
     foreach ($metas as $meta) {
-      $newHash = $client->setDynamicMetadata($focusArea, $meta->getHash(), null);
+      $newHash = $client->setDynamicMetadata($focusArea, $meta->getHash(), null, ['deletePrevious' => true]);
       if ($newHash) {
         // Check if the old hash has been updated
         if ($meta->getHash() !== $newHash) {
@@ -391,4 +396,3 @@ function rokka_crop_presave($entity) {
     }
   }
 }
-
