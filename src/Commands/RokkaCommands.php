@@ -21,9 +21,10 @@ class RokkaCommands extends DrushCommands {
    * Migrate existing imagestyles to rokka stacks.
    *
    * @command rokka:migrate-imagestyles
+   * @option force
    * @aliases rim, rokka-mim
    */
-  public function migrateImageStyles() {
+  public function migrateImageStyles($options = ['force' => FALSE]) {
     $this->output()->writeln('Migrating local image styles to rokka.io stacks.');
     $styles = ImageStyle::loadMultiple();
     $stacks = RokkaStack::loadMultiple();
@@ -31,7 +32,7 @@ class RokkaCommands extends DrushCommands {
     // Find all and create all missing stacks on rokka.io
     foreach ($styles as $style) {
       /** @var ImageStyle $style */
-      if (empty($stacks[$style->getName()])) {
+      if (empty($stacks[$style->getName()]) || $options['force']) {
         // Create stack
         try {
           rokka_image_style_presave($style);
@@ -43,6 +44,6 @@ class RokkaCommands extends DrushCommands {
         }
       }
     }
-    $this->output()->writeln('Orphaned images deleted.');
+    $this->output()->writeln('Image styles migration completed.');
   }
 }
