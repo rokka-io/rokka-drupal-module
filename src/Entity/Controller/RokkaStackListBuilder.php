@@ -56,6 +56,11 @@ class RokkaStackListBuilder extends ConfigEntityListBuilder {
           'weight' => 10,
           'url' => Url::fromRoute('entity.image_style.edit_form', ['image_style' => $entity->id()]),
         ],
+        'delete' => [
+          'title' => $this->t('Delete'),
+          'weight' => 10,
+          'url' => Url::fromRoute('entity.rokka_stack.delete_form', ['rokka_stack' => $entity->id()]),
+        ],
       ],
     ];
 

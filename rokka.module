@@ -290,17 +290,21 @@ function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
   $form_object = $form_state->getFormObject();
   /** @var \Drupal\rokka\RokkaService $rokkaService */
   $rokkaService = \Drupal::service('rokka.service');
+  /** @var Drupal\Core\Config\ $config */
+  $config = \Drupal::config('rokka.settings');
+
   /** @var \Drupal\rokka\Entity\RokkaStack $stackEntity */
   $stackEntity = $rokkaService->getEntityManager()->getStorage('rokka_stack')->load($form_object->getEntity()
     ->get("name"));
+
   if ($stackEntity instanceof RokkaStack) {
     $stackOptions = $stackEntity->getStackOptions();
+    $defaultFormat = $stackEntity->getOutputFormat();
   }
   else {
     $stackOptions = [];
+    $defaultFormat = $config->get('output_format');
   }
-
-  $config = \Drupal::config('rokka.settings');
 
   $userInput = $form_state->getUserInput();
   $form['rokka_stack_options'] = [
@@ -316,7 +320,7 @@ function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
     '#title' => t('Output format '),
     '#description' => t('Defines the delivered image format.'),
     '#required' => TRUE,
-    '#default_value' => $stackEntity->getOutputFormat() ?? $config->get('output_format'),
+    '#default_value' =>  $defaultFormat,
     '#options' => [
       'jpg' => t('JPG'),
       'png' => t('PNG'),

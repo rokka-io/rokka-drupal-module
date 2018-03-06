@@ -30,6 +30,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "label" = "label"
  *   },
  *   links = {
+ *     "delete-form" = "/admin/structure/rokka_stack/{rokka_stack}/delete",
  *     "collection" = "/admin/structure/rokka_stacks",
  *   },
  *   config_export = {
