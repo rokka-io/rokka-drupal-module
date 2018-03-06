@@ -3,25 +3,3 @@ rokka.admin_settings:
   description: 'Configure Rokka.io settings.'
   route_name: rokka.admin_settings
   parent: 'system.admin_config_media'
-
-# Rokka Metadata menu items definition
-entity.rokka_metadata.collection:
-  title: 'Rokka Metadata list'
-  route_name: entity.rokka_metadata.collection
-  description: 'List Rokka Metadata entities'
-  parent: system.admin_structure
-  weight: 100
-
-rokka_metadata.admin.structure.settings:
-  title: Rokka Metadata settings
-  description: 'Configure Rokka Metadata entities'
-  route_name: rokka_metadata.settings
-  parent: system.admin_structure
-
-# Rokka stack menu items definition
-entity.rokka_stack.collection:
-  title: 'Rokka stack'
-  route_name: entity.rokka_stack.collection
-  description: 'List Rokka stack (bundles)'
-  parent: system.admin_structure
-  weight: 99

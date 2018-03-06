@@ -12,7 +12,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *   label = @Translation("Rokka stack"),
  *   handlers = {
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
- *     "list_builder" = "Drupal\rokka\RokkaStackListBuilder",
+ *     "list_builder" = "Drupal\rokka\Entity\Controller\RokkaStackListBuilder",
  *     "form" = {
  *       "add" = "Drupal\rokka\Form\RokkaStackForm",
  *       "edit" = "Drupal\rokka\Form\RokkaStackForm",
@@ -23,18 +23,14 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     },
  *   },
  *   config_prefix = "rokka_stack",
- *   admin_permission = "administer site configuration",
+ *   admin_permission = "administer rokka",
  *   entity_keys = {
  *     "id" = "id",
  *     "uuid" = "uuid",
  *     "label" = "label"
  *   },
  *   links = {
- *     "canonical" = "/admin/structure/rokka_stack/{rokka_stack}",
- *     "add-form" = "/admin/structure/rokka_stack/add",
- *     "edit-form" = "/admin/structure/rokka_stack/{rokka_stack}/edit",
- *     "delete-form" = "/admin/structure/rokka_stack/{rokka_stack}/delete",
- *     "collection" = "/admin/structure/rokka_stack"
+ *     "collection" = "/admin/structure/rokka_stacks",
  *   },
  *   config_export = {
  *     "organization",

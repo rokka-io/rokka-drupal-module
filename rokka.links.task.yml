@@ -2,28 +2,11 @@ rokka.settings:
   title: 'Settings'
   route_name: rokka.admin_settings
   base_route: rokka.admin_settings
-rokka.actions:
+rokka.stacks:
   title: 'Stacks'
   route_name: rokka.admin_stacks
   base_route: rokka.admin_settings
-# Rokka Metadata routing definition
-rokka_metadata.settings_tab:
-  route_name: rokka_metadata.settings
-  title: 'Settings'
-  base_route: rokka_metadata.settings
-
-entity.rokka_metadata.canonical:
-  route_name: entity.rokka_metadata.canonical
-  base_route: entity.rokka_metadata.canonical
-  title: 'View'
-
-entity.rokka_metadata.edit_form:
-  route_name: entity.rokka_metadata.edit_form
-  base_route: entity.rokka_metadata.canonical
-  title: 'Edit'
-
-entity.rokka_metadata.delete_form:
-  route_name:  entity.rokka_metadata.delete_form
-  base_route:  entity.rokka_metadata.canonical
-  title: Delete
-  weight: 10
+rokka.metadata:
+  title: 'Metadata'
+  route_name: rokka.admin_metadata
+  base_route: rokka.admin_settings

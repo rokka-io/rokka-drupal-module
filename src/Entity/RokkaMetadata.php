@@ -19,7 +19,7 @@ use Drupal\user\UserInterface;
  *   label = @Translation("Rokka Metadata"),
  *   handlers = {
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
- *     "list_builder" = "Drupal\rokka\RokkaMetadataListBuilder",
+ *     "list_builder" = "Drupal\rokka\Entity\Controller\RokkaMetadataListBuilder",
  *     "views_data" = "Drupal\rokka\Entity\RokkaMetadataViewsData",
  *     "storage_schema" = "Drupal\rokka\Entity\MetadataStorageSchema",
  *     "form" = {
@@ -28,13 +28,12 @@ use Drupal\user\UserInterface;
  *       "edit" = "Drupal\rokka\Form\RokkaMetadataForm",
  *       "delete" = "Drupal\rokka\Form\RokkaMetadataDeleteForm",
  *     },
- *     "access" = "Drupal\rokka\RokkaMetadataAccessControlHandler",
  *     "route_provider" = {
  *       "html" = "Drupal\rokka\RokkaMetadataHtmlRouteProvider",
  *     },
  *   },
  *   base_table = "rokka_metadata",
- *   admin_permission = "administer rokka metadata entities",
+ *   admin_permission = "administer rokka",
  *   entity_keys = {
  *     "id" = "id",
  *     "hash" = "hash",
@@ -47,9 +46,7 @@ use Drupal\user\UserInterface;
  *   },
  *   links = {
  *     "canonical" = "/admin/structure/rokka_metadata/{rokka_metadata}",
- *     "add-form" = "/admin/structure/rokka_metadata/add",
  *     "edit-form" = "/admin/structure/rokka_metadata/{rokka_metadata}/edit",
- *     "delete-form" = "/admin/structure/rokka_metadata/{rokka_metadata}/delete",
  *     "collection" = "/admin/structure/rokka_metadata",
  *   },
  *   field_ui_base_route = "rokka_metadata.settings",

@@ -4,31 +4,13 @@ namespace Drupal\rokka\Entity\Controller;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
+use Drupal\Core\Link;
 
 /**
  * Provides a list controller for rokka_metadata entity.
  *
  */
 class RokkaMetadataListBuilder extends EntityListBuilder {
-
-  /**
-   * {@inheritdoc}
-   *
-   * We override ::render() so that we can add our own content above the table.
-   * parent::render() is where EntityListBuilder creates the table using our
-   * buildHeader() and buildRow() implementations.
-   */
-  public function render() {
-    $build['description'] = [
-      '#markup' => $this->t('Rokka Metadata Entity. You can manage the settings on the <a href="@adminlink">Rokka Metadata settings</a>.', [
-        '@adminlink' => \Drupal::urlGenerator()
-          ->generateFromRoute('rokka.rokka_metadata_settings'),
-      ]),
-    ];
-
-    $build += parent::render();
-    return $build;
-  }
 
   /**
    * {@inheritdoc}
@@ -40,6 +22,7 @@ class RokkaMetadataListBuilder extends EntityListBuilder {
    */
   public function buildHeader() {
     $header['id'] = $this->t('ID');
+    $header['name'] = $this->t('Name');
     $header['hash'] = $this->t('Hash');
     $header['filesize'] = $this->t('File size');
     $header['uri'] = $this->t('Uri');
@@ -52,6 +35,11 @@ class RokkaMetadataListBuilder extends EntityListBuilder {
   public function buildRow(EntityInterface $entity) {
     /* @var $entity \Drupal\rokka\Entity\RokkaMetadata */
     $row['id'] = $entity->id();
+    $row['name'] = Link::createFromRoute(
+      $entity->label(),
+      'entity.rokka_metadata.edit_form',
+      ['rokka_metadata' => $entity->id()]
+    );
     $row['hash'] = $entity->getHash();
     $row['filesize'] = $entity->getFilesize();
     $row['uri'] = $entity->getUri();
