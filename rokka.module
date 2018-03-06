@@ -25,21 +25,33 @@ function rokka_image_style_presave(ImageStyle $entity) {
 
   $effectStack = rokka_getEffectStack($entity);
 
+  $config = \Drupal::config('rokka.settings');
+
   // Create the stack on rokka.
   $stackOptionsForm = $entity->get('rokka_stack_options');
   $stackOptions = [];
-  if ($stackOptionsForm['rokka_jpg_quality'] > 0) {
+
+  // Set jpg quality.
+  $stackOptions['jpg.quality'] = $config->get('jpg_quality');
+  if (!empty($stackOptionsForm['rokka_jpg_quality']) && $stackOptionsForm['rokka_jpg_quality'] > 0) {
     $stackOptions['jpg.quality'] = $stackOptionsForm['rokka_jpg_quality'];
   }
-  if ($stackOptionsForm['rokka_webp_quality'] > 0) {
+
+  // Set webp quality.
+  $stackOptions['webp.quality'] = $config->get('webp_quality');
+  if (!empty($stackOptionsForm['rokka_webp_quality']) && $stackOptionsForm['rokka_webp_quality'] > 0) {
     $stackOptions['webp.quality'] = $stackOptionsForm['rokka_webp_quality'];
+  }
+
+  // Set autoformat value.
+  $stackOptions['autoformat'] = $config->get('autoformat');
+  if (!empty($stackOptionsForm['rokka_autoformat'])) {
+    $stackOptions['autoformat'] = $stackOptionsForm['rokka_autoformat'];
   }
   if ($stackOptionsForm['rokka_autoformat'] === 'none' || $stackOptionsForm['rokka_autoformat'] === NULL) {
     unset($stackOptions['autoformat']);
   }
-  else {
-    $stackOptions['autoformat'] = $stackOptionsForm['rokka_autoformat'];
-  }
+
   $stack = new Stack($rokkaService->getRokkaOrganizationName(), $entity->getName(), $effectStack, $stackOptions);
   $remoteStack = $client->saveStack($stack, ['overwrite' => TRUE]);
   // Create the config entity object.
@@ -285,6 +297,9 @@ function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
   else {
     $stackOptions = [];
   }
+
+  $config = \Drupal::config('rokka.settings');
+
   $userInput = $form_state->getUserInput();
   $form['rokka_stack_options'] = [
     '#type' => 'fieldset',
@@ -302,7 +317,7 @@ function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
     '#size' => 20,
     '#maxlength' => 3,
     '#required' => FALSE,
-    '#default_value' => 0,
+    '#default_value' => $config->get('jpg_quality') ?? 0,
     '#min' => 0,
     '#max' => 100,
   ];
@@ -315,7 +330,7 @@ function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
     '#size' => 20,
     '#maxlength' => 3,
     '#required' => FALSE,
-    '#default_value' => 0,
+    '#default_value' => $config->get('webp_quality') ?? 0,
     '#min' => 0,
     '#max' => 100,
   ];
@@ -327,7 +342,7 @@ function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
     '#title' => t('autoformat '),
     '#description' => t('If set, rokka delivers the best format supported by the browser.'),
     '#required' => FALSE,
-    '#default_value' => 'none',
+    '#default_value' => $config->get('autoformat') ?? 'none',
     '#options' => [
       'true' => t('True'),
       'false' => t('False'),

@@ -10,6 +10,15 @@ rokka.settings:
     api_endpoint:
       type: string
       label: 'API Key'
+    jpg_quality:
+      type: string
+      label: 'Default JPG quality'
+    webp_quality:
+      type: string
+      label: 'Default WEBP quality'
+    autoformat:
+      type: string
+      label: 'Default autoformat value'
     organization_name:
       type: string
       label: 'Organization Name'

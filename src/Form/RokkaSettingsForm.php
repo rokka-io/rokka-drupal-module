@@ -58,6 +58,47 @@ class RokkaSettingsForm extends ConfigFormBase {
           '#default_value' => $config->get('organization_name'),
         ],
       ],
+      'stack_default_settings' => [
+        '#type' => 'fieldset',
+        '#title' => $this->t('Rokka Stack: Default Values'),
+        '#description' => $this->t('These values will be used, when creating new stacks or the value is not set.'),
+        '#collapsible' => FALSE,
+
+        'jpg_quality' => [
+          '#type' => 'textfield',
+          '#title' => t('JPG quality'),
+          '#description' => t('JPEG Quality: from 1 (high compression, low quality) to 100 (low compression, high quality)'),
+          '#size' => 20,
+          '#maxlength' => 3,
+          '#required' => FALSE,
+          '#min' => 0,
+          '#max' => 100,
+          '#default_value' => $config->get('jpg_quality') ?? 76,
+        ],
+        'webp_quality' => [
+          '#type' => 'textfield',
+          '#title' => t('WEBP quality'),
+          '#description' => t('WEBP Quality: from 1 (high compression, low quality) to 100 (low compression, high quality)'),
+          '#size' => 20,
+          '#maxlength' => 3,
+          '#required' => FALSE,
+          '#min' => 0,
+          '#max' => 100,
+          '#default_value' => $config->get('webp_quality') ?? 80,
+        ],
+        'autoformat' => [
+          '#type' => 'radios',
+          '#title' => t('autoformat '),
+          '#description' => t('If set, rokka delivers the best format supported by the browser.'),
+          '#required' => FALSE,
+          '#default_value' => $config->get('autoformat') ?? 'none',
+          '#options' => [
+            'true' => t('True'),
+            'false' => t('False'),
+            'none' => t('Rokka default (false)'),
+          ],
+        ],
+      ],
       'api_endpoint' => [
         '#title' => $this->t('API Endpoint'),
         '#description' => $this->t('The API endpoint'),
@@ -65,7 +106,7 @@ class RokkaSettingsForm extends ConfigFormBase {
         '#required' => TRUE,
         '#default_value' => $config->get('api_endpoint'),
       ],
-      'stack' => [
+      'stack_prefix' => [
         '#title' => $this->t('Stack Name Prefix'),
         '#description' => $this->t('Adds a prefix for newly created Rokka stacks. Helps preventing overwriting existing stacks created in the Rokka.io dashboard. '),
         '#type' => 'textfield',
@@ -87,7 +128,11 @@ class RokkaSettingsForm extends ConfigFormBase {
     $config->set('is_enabled', $values['is_enabled']);
     $config->set('api_key', $values['api_key']);
     $config->set('api_endpoint', $values['api_endpoint']);
+    $config->set('jpg_quality', $values['jpg_quality']);
+    $config->set('webp_quality', $values['webp_quality']);
+    $config->set('autoformat', $values['autoformat']);
     $config->set('organization_name', $values['organization_name']);
+    $config->set('stack_prefix', $values['stack_prefix']);
     $config->save();
 
     parent::submitForm($form, $form_state);

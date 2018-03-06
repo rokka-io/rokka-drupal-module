@@ -1,5 +1,8 @@
 api_key: ~
 api_endpoint: "https://api.rokka.io"
 is_enabled: FALSE
+jpg_quality: 76
+webp_quality: 80
+autoformat: 'none'
 organization_name: ~
 stack_prefix: ~
