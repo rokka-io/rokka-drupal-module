@@ -73,7 +73,7 @@ class RokkaSettingsForm extends ConfigFormBase {
           '#required' => FALSE,
           '#min' => 0,
           '#max' => 100,
-          '#default_value' => $config->get('jpg_quality') ?? 76,
+          '#default_value' => $config->get('jpg_quality') ?? 0,
         ],
         'webp_quality' => [
           '#type' => 'textfield',
@@ -84,7 +84,7 @@ class RokkaSettingsForm extends ConfigFormBase {
           '#required' => FALSE,
           '#min' => 0,
           '#max' => 100,
-          '#default_value' => $config->get('webp_quality') ?? 80,
+          '#default_value' => $config->get('webp_quality') ?? 0,
         ],
         'output_format' => [
           '#type' => 'select',
