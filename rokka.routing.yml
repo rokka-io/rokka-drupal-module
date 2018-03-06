@@ -13,7 +13,3 @@ rokka.admin_stacks:
    _title: 'Rokka stacks'
   requirements:
    _permission: 'Administer Rokka'
-
-
-route_callbacks:
-  - '\Drupal\rokka\Routing\RokkaImageStyleRoutes::routes'

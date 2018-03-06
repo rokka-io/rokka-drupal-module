@@ -1,6 +1,4 @@
-
 services:
-
   rokka.logger:
       parent: logger.channel_base
       arguments: ['rokka']
@@ -14,9 +12,3 @@ services:
     arguments: ['@rokka.service', '@rokka.logger']
     tags:
       - { name: stream_wrapper, scheme: rokka }
-
-  rokka.path_processor.image_styles:
-    class: Drupal\rokka\PathProcessor\RokkaPathProcessorImageStyles
-    tags:
-      - { name: path_processor_inbound, priority: 310 }
-      - { name: path_processor_outound, priority: 310 }
