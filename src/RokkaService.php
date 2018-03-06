@@ -108,6 +108,17 @@ class RokkaService implements RokkaServiceInterface {
   }
 
   /**
+   * @param $name
+   *
+   * @return \Drupal\Core\Entity\EntityInterface|null
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   */
+  public function loadStackByName($name) {
+    return $rokka_metadata_storage = \Drupal::entityTypeManager()
+      ->getStorage('rokka_stack')->load($name);
+  }
+
+  /**
    * Counts the number of images that share the same Hash.
    *
    * @param string $hash

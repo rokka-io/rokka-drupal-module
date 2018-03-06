@@ -136,14 +136,6 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
 
     if (strpos($this->uri, 'rokka://styles/') === 0) {
       $exploded_uri = explode('/', $this->uri);
-      // @TODO Check if this image stack exists
-
-      // Try {
-      //        self::$imageClient->getStack($exploded_uri[3]);
-      //        $replacement = $exploded_uri[3] . '/';
-      //      } catch (Exception $e) {
-      //        $replacement = '';
-      //      }.
       $stack_name = $exploded_uri[3];
     }
 
@@ -165,7 +157,14 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
       $name = RokkaService::cleanRokkaSeoFilename($filename);
     }
 
-    $externalUri = self::$imageClient->getSourceImageUri($meta->getHash(), $defaultStyle, 'jpg', $name);
+    /** @var \Drupal\rokka\Entity\RokkaStack $stackEntity */
+    $stackEntity = $this->rokkaService->loadStackByName($stack_name);
+    $outputFormat = 'jpg';
+    if (!empty($stackEntity)) {
+      // Let the rokka stack alter the output image format.
+      $outputFormat = $stackEntity->getOutputFormat() ?? 'jpg';
+    }
+    $externalUri = self::$imageClient->getSourceImageUri($meta->getHash(), $defaultStyle, $outputFormat, $name);
     return (string) $externalUri;
   }
 
@@ -594,6 +593,9 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
       $meta->hash = $sourceImage->shortHash;
       $meta->created = $sourceImage->created->getTimestamp();
       $meta->filesize = $sourceImage->size;
+      $meta->setHeight($sourceImage->height);
+      $meta->setWidth($sourceImage->width);
+      $meta->setFormat($sourceImage->format);
     }
     else {
       $this->logger->debug('New Image uploaded to Rokka for "{uri}": "{hash}"', [
@@ -601,18 +603,14 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
         'hash' => $sourceImage->shortHash,
       ]);
 
-      // This is a new URI, track it in our RokkaMetadata entities.
-      //      $meta = entity_create('rokka_metadata', [
-      //        'uri' => $this->uri,
-      //        'hash' => $sourceImage->shortHash,
-      //        'filesize' => $sourceImage->size,
-      //        'created' => $sourceImage->created->getTimestamp(),
-      //      ]);
       $meta = RokkaMetadata::create([
         'uri' => $this->uri,
         'hash' => $sourceImage->shortHash,
         'filesize' => $sourceImage->size,
         'created' => $sourceImage->created->getTimestamp(),
+        'height' => $sourceImage->height,
+        'width' => $sourceImage->width,
+        'format' => $sourceImage->format,
       ]);
     }
 

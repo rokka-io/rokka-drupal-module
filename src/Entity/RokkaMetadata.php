@@ -37,11 +37,9 @@ use Drupal\user\UserInterface;
  *   entity_keys = {
  *     "id" = "id",
  *     "hash" = "hash",
- *     "filesize" = "filesize",
  *     "uri" = "uri",
  *     "uuid" = "uuid",
  *     "uid" = "user_id",
- *     "langcode" = "langcode",
  *     "status" = "status",
  *   },
  *   links = {
@@ -76,10 +74,10 @@ class RokkaMetadata extends ContentEntityBase implements RokkaMetadataInterface 
     $fields['user_id'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Authored by'))
       ->setDescription(t('The user ID of author of the Rokka Metadata entity.'))
-      ->setRevisionable(TRUE)
+      ->setRevisionable(FALSE)
       ->setSetting('target_type', 'user')
       ->setSetting('handler', 'default')
-      ->setTranslatable(TRUE)
+      ->setTranslatable(FALSE)
       ->setDisplayOptions('view', [
         'label' => 'hidden',
         'type' => 'author',
@@ -135,6 +133,33 @@ class RokkaMetadata extends ContentEntityBase implements RokkaMetadataInterface 
         'size' => 'big',
         'not null' => TRUE,
         'unsigned' => TRUE,
+      ]);
+
+    $fields['height'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Height'))
+      ->setDescription(t('The height of the image.'))
+      ->setSettings([
+        'size' => 'big',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ]);
+
+    $fields['width'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Width'))
+      ->setDescription(t('The width of the image.'))
+      ->setSettings([
+        'size' => 'big',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ]);
+
+    $fields['format'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Image Format'))
+      ->setDescription(t('The image format type of the file.'))
+      ->setSettings([
+        'default_value' => '',
+        'max_length' => 255,
+        'not null' => TRUE,
       ]);
 
     $fields['status'] = BaseFieldDefinition::create('boolean')
@@ -201,6 +226,51 @@ class RokkaMetadata extends ContentEntityBase implements RokkaMetadataInterface 
   /**
    * {@inheritdoc}
    */
+  public function getHeight() {
+    return $this->get('height')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setHeight($height) {
+    $this->set('height', $height);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getWidth() {
+    return $this->get('width')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setWidth($width) {
+    $this->set('width', $width);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormat() {
+    return $this->get('format')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setFormat($format) {
+    $this->set('width', $format);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCreatedTime() {
     return $this->get('created')->value;
   }
@@ -257,5 +327,6 @@ class RokkaMetadata extends ContentEntityBase implements RokkaMetadataInterface 
     $this->set('status', $published ? TRUE : FALSE);
     return $this;
   }
+
 
 }

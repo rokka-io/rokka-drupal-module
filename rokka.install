@@ -4,6 +4,22 @@
  * @file
  */
 
+/**
+ *  Install hooks can be reset using drush ev "\Drupal::keyValue('system.schema')->set('rokka', (int) 8000)";
+ */
+
+/**
+ * Remove language and revision from rokka_metadata
+ *
+ */
+function rokka_update_8001(&$sandbox) {
+  $entity_type = \Drupal::service('entity_type.manager')->getDefinition('rokka_metadata');
+  \Drupal::service('entity.definition_update_manager')->updateEntityType($entity_type);
+
+  $entity_type = \Drupal::service('entity_type.manager')->getDefinition('rokka_stack');
+  \Drupal::service('entity.definition_update_manager')->updateEntityType($entity_type);
+}
+
 // **
 // * @file
 // * Install, update and uninstall functions for the Rokka module.

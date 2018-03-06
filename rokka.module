@@ -61,6 +61,7 @@ function rokka_image_style_presave(ImageStyle $entity) {
   if ($rokkaStack instanceof RokkaStack) {
     $rokkaStack->setStackOptions($remoteStack->stackOptions);
     $rokkaStack->setOrganization($remoteStack->organization);
+    $rokkaStack->setOutputFormat($stackOptionsForm['rokka_output_format']);
   }
   else {
     $rokkaStack = RokkaStack::create([
@@ -68,6 +69,7 @@ function rokka_image_style_presave(ImageStyle $entity) {
       'organization' => $remoteStack->organization,
       'stackOperations' => $remoteStack->stackOperations,
       'stackOptions' => $remoteStack->stackOptions,
+      'outputFormat' => $stackOptionsForm['rokka_output_format'],
       'label' => $remoteStack->name,
     ]);
   }
@@ -304,10 +306,22 @@ function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
   $form['rokka_stack_options'] = [
     '#type' => 'fieldset',
     '#title' => 'Rokka Stack settings',
-    '#description' => t('Settings for the Rokka Stack creation'),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
     '#tree' => TRUE,
+  ];
+
+  $form['rokka_stack_options']['rokka_output_format'] = [
+    '#type' => 'select',
+    '#title' => t('Output format '),
+    '#description' => t('Defines the delivered image format.'),
+    '#required' => TRUE,
+    '#default_value' => $stackEntity->getOutputFormat() ?? $config->get('output_format'),
+    '#options' => [
+      'jpg' => t('JPG'),
+      'png' => t('PNG'),
+      'gif' => t('GIF'),
+    ],
   ];
 
   $form['rokka_stack_options']['rokka_jpg_quality'] = [

@@ -11,6 +11,9 @@ rokka.rokka_stack.*:
     options:
       type: array
       label: 'Options'
+    output_format:
+      type: string
+      label: 'Default output format'
     operations:
       type: array
       label: 'Operations'

@@ -4,5 +4,6 @@ is_enabled: FALSE
 jpg_quality: 76
 webp_quality: 80
 autoformat: 'none'
+output_format: 'jpg'
 organization_name: ~
 stack_prefix: ~

@@ -36,6 +36,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "organization",
  *     "stackOptions",
  *     "id",
+ *     "outputFormat",
  *     "label"
  *   }
  * )
@@ -55,6 +56,13 @@ class RokkaStack extends ConfigEntityBase implements RokkaStackInterface {
    * @var string
    */
   protected $organization;
+
+  /**
+   * The Rokka output format
+   *
+   * @var string
+   */
+  protected $outputFormat;
 
   /**
    * The Rokka stack options.
@@ -170,6 +178,20 @@ class RokkaStack extends ConfigEntityBase implements RokkaStackInterface {
    */
   public function setOrganization(string $organization) {
     $this->organization = $organization;
+  }
+
+  /**
+   * Get outputFormat
+   */
+  public function getOutputFormat() {
+    return $this->outputFormat;
+  }
+
+  /**
+   * @param string $outputFormat
+   */
+  public function setOutputFormat(string $outputFormat) {
+    $this->outputFormat = $outputFormat;
   }
 
 }

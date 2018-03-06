@@ -86,10 +86,22 @@ class RokkaSettingsForm extends ConfigFormBase {
           '#max' => 100,
           '#default_value' => $config->get('webp_quality') ?? 80,
         ],
+        'output_format' => [
+          '#type' => 'select',
+          '#title' => t('Output format '),
+          '#description' => t('Defines the delivered image format.'),
+          '#required' => TRUE,
+          '#default_value' => $config->get('output_format') ?? 'jpg',
+          '#options' => [
+            'jpg' => t('JPG'),
+            'png' => t('PNG'),
+            'gif' => t('GIF'),
+          ],
+        ],
         'autoformat' => [
           '#type' => 'radios',
           '#title' => t('autoformat '),
-          '#description' => t('If set, rokka delivers the best format supported by the browser.'),
+          '#description' => t('If set, rokka delivers the WEBP instead of JPG to supported browsers.'),
           '#required' => FALSE,
           '#default_value' => $config->get('autoformat') ?? 'none',
           '#options' => [
@@ -131,6 +143,7 @@ class RokkaSettingsForm extends ConfigFormBase {
     $config->set('jpg_quality', $values['jpg_quality']);
     $config->set('webp_quality', $values['webp_quality']);
     $config->set('autoformat', $values['autoformat']);
+    $config->set('output_format', $values['output_format']);
     $config->set('organization_name', $values['organization_name']);
     $config->set('stack_prefix', $values['stack_prefix']);
     $config->save();
