@@ -29,6 +29,16 @@ function rokka_image_style_presave(ImageStyle $entity) {
 
   // Create the stack on rokka.
   $stackOptionsForm = $entity->get('rokka_stack_options');
+  if(empty($stackOptionsForm)) {
+    // Fallback to stack data
+    $rokkaStack = $rokkaService->loadStackByName($entity->getName());
+    if ($rokkaStack instanceof RokkaStack) {
+      $stackOptionsForm['rokka_jpg_quality'] = $rokkaStack->getStackOptions()['jpg.quality'];
+      $stackOptionsForm['rokka_webp_quality'] = $rokkaStack->getStackOptions()['webp.quality'];
+      $stackOptionsForm['rokka_output_format'] = $rokkaStack->getOutputFormat();
+    }
+  }
+
   $stackOptions = [];
 
   // Set jpg quality.
@@ -52,6 +62,12 @@ function rokka_image_style_presave(ImageStyle $entity) {
     unset($stackOptions['autoformat']);
   }
 
+  // Set output format.
+  $outputFormat = $config->get('output_format');
+  if(!empty($stackOptionsForm['rokka_output_format'])) {
+    $outputFormat = $stackOptionsForm['rokka_output_format'];
+  }
+
   $stack = new Stack($rokkaService->getRokkaOrganizationName(), $entity->getName(), $effectStack, $stackOptions);
   $remoteStack = $client->saveStack($stack, ['overwrite' => TRUE]);
   // Create the config entity object.
@@ -61,7 +77,7 @@ function rokka_image_style_presave(ImageStyle $entity) {
   if ($rokkaStack instanceof RokkaStack) {
     $rokkaStack->setStackOptions($remoteStack->stackOptions);
     $rokkaStack->setOrganization($remoteStack->organization);
-    $rokkaStack->setOutputFormat($stackOptionsForm['rokka_output_format']);
+    $rokkaStack->setOutputFormat($outputFormat);
   }
   else {
     $rokkaStack = RokkaStack::create([
@@ -69,7 +85,7 @@ function rokka_image_style_presave(ImageStyle $entity) {
       'organization' => $remoteStack->organization,
       'stackOperations' => $remoteStack->stackOperations,
       'stackOptions' => $remoteStack->stackOptions,
-      'outputFormat' => $stackOptionsForm['rokka_output_format'],
+      'outputFormat' => $outputFormat,
       'label' => $remoteStack->name,
     ]);
   }

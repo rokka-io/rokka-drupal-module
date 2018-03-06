@@ -191,7 +191,7 @@ class RokkaStack extends ConfigEntityBase implements RokkaStackInterface {
   /**
    * @param string $outputFormat
    */
-  public function setOutputFormat(string $outputFormat) {
+  public function setOutputFormat($outputFormat = null) {
     $this->outputFormat = $outputFormat;
   }
 
