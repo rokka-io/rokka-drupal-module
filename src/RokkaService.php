@@ -61,6 +61,19 @@ class RokkaService implements RokkaServiceInterface {
   }
 
   /**
+   * Returns the SEO compliant filename for the given image name.
+   *
+   * @param string $filename
+   *
+   * @return string
+   */
+  public static function cleanRokkaSeoFilename($filename) {
+    // Rokka.io accepts SEO URL part as "[a-z0-9-]" only, remove not valid
+    // characters and replace them with '-'.
+    return TemplateHelper::slugify($filename);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getRokkaImageClient() {
@@ -127,19 +140,6 @@ class RokkaService implements RokkaServiceInterface {
   public function getSettings($param) {
     // TODO: Implement getSettings() method.
     return FALSE;
-  }
-
-  /**
-   * Returns the SEO compliant filename for the given image name.
-   *
-   * @param string $filename
-   *
-   * @return string
-   */
-  public static function cleanRokkaSeoFilename($filename) {
-    // Rokka.io accepts SEO URL part as "[a-z0-9-]" only, remove not valid
-    // characters and replace them with '-'.
-    return TemplateHelper::slugify($filename);
   }
 
   /**

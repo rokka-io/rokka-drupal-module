@@ -24,6 +24,7 @@ class ImageStyleHelper {
 
   /**
    * @param $value
+   *
    * @return mixed
    */
   public static function operationNormalizeColor($value) {
@@ -32,6 +33,7 @@ class ImageStyleHelper {
 
   /**
    * @param $value
+   *
    * @return mixed
    */
   public static function operationNormalizeSize($value) {
@@ -41,14 +43,16 @@ class ImageStyleHelper {
 
   /**
    * @param array $effects
+   *
    * @return \Rokka\Client\Core\StackOperation[]
    */
   public static function buildStackOperationCollection($effects) {
     if (empty($effects)) {
-      $effects = [[
-        'name' => 'noop',
-        'data' => NULL,
-      ],
+      $effects = [
+        [
+          'name' => 'noop',
+          'data' => NULL,
+        ],
       ];
     }
 
@@ -73,6 +77,7 @@ class ImageStyleHelper {
 
   /**
    * @param array $effect
+   *
    * @return \Rokka\Client\Core\StackOperation[]
    */
   public static function buildStackOperation(array $effect) {
@@ -96,6 +101,7 @@ class ImageStyleHelper {
 
   /**
    * @param string $str
+   *
    * @return string
    */
   public static function camelCase($str, $classCase = FALSE) {

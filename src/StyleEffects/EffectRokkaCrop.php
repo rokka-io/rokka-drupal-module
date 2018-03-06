@@ -16,7 +16,7 @@ class EffectRokkaCrop implements InterfaceEffectImage {
   public static function buildRokkaStackOperation($data) {
     $crop_options = [
       'height' => ImageStyleHelper::operationNormalizeSize($data['height']),
-      'width'  => ImageStyleHelper::operationNormalizeSize($data['width']),
+      'width' => ImageStyleHelper::operationNormalizeSize($data['width']),
       'anchor' => $data['anchor'],
     ];
 

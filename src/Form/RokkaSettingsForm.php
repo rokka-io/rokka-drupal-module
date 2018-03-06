@@ -18,13 +18,6 @@ class RokkaSettingsForm extends ConfigFormBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  protected function getEditableConfigNames() {
-    return ['rokka.settings'];
-  }
-
-  /**
    *
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
@@ -98,6 +91,13 @@ class RokkaSettingsForm extends ConfigFormBase {
     $config->save();
 
     parent::submitForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getEditableConfigNames() {
+    return ['rokka.settings'];
   }
 
 }

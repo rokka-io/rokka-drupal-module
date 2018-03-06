@@ -36,7 +36,8 @@ class RokkaCommands extends DrushCommands {
         // Create stack
         try {
           rokka_image_style_presave($style);
-          $this->logger()->success(dt('Image style !style_name stack created on rokka.io', ['!style_name' => $style->getName()]));
+          $this->logger()
+            ->success(dt('Image style !style_name stack created on rokka.io', ['!style_name' => $style->getName()]));
         } catch (\Exception $ex) {
           $this->logger()->error(
             dt('Image style !style_name stack failed to save on rokka.io', ['!style_name' => $style->getName()])

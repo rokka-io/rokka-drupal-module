@@ -118,6 +118,26 @@ class RokkaStack extends ConfigEntityBase implements RokkaStackInterface {
   }
 
   /**
+   * Get stack options.
+   *
+   * @return array
+   *   The options.
+   */
+  public function getStackOptions(): array {
+    return self::dotStackOptions($this->stackOptions);
+  }
+
+  /**
+   * Set Stack options.
+   *
+   * @param array $options
+   *   The options.
+   */
+  public function setStackOptions(array $options) {
+    $this->stackOptions = self::deDotStackOptions($options);
+  }
+
+  /**
    * Replace __ with . in stackOptions.
    *
    * @param array $values
@@ -134,26 +154,6 @@ class RokkaStack extends ConfigEntityBase implements RokkaStackInterface {
       }
     }
     return $values;
-  }
-
-  /**
-   * Set Stack options.
-   *
-   * @param array $options
-   *   The options.
-   */
-  public function setStackOptions(array $options) {
-    $this->stackOptions = self::deDotStackOptions($options);
-  }
-
-  /**
-   * Get stack options.
-   *
-   * @return array
-   *   The options.
-   */
-  public function getStackOptions(): array {
-    return self::dotStackOptions($this->stackOptions);
   }
 
   /**

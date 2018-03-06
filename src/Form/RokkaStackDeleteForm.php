@@ -21,13 +21,6 @@ class RokkaStackDeleteForm extends EntityConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
-    return new Url('entity.rokka_stack.collection');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getConfirmText() {
     return $this->t('Delete');
   }
@@ -44,10 +37,17 @@ class RokkaStackDeleteForm extends EntityConfirmFormBase {
           '@type' => $this->entity->bundle(),
           '@label' => $this->entity->label(),
         ]
-        )
+      )
     );
 
     $form_state->setRedirectUrl($this->getCancelUrl());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCancelUrl() {
+    return new Url('entity.rokka_stack.collection');
   }
 
 }

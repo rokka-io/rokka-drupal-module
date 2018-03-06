@@ -16,7 +16,7 @@ class EffectRokkaBlur implements InterfaceEffectImage {
   public static function buildRokkaStackOperation($data) {
     $options = [
       'radius' => ImageStyleHelper::operationNormalizeSize($data['radius']),
-      'sigma'  => ImageStyleHelper::operationNormalizeSize($data['sigma']),
+      'sigma' => ImageStyleHelper::operationNormalizeSize($data['sigma']),
     ];
 
     return [

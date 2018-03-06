@@ -4,12 +4,11 @@
  * @file
  */
 
-use Drupal\Core\Entity\EntityInterface;
-use Rokka\Client\UriHelper;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\rokka\Entity\RokkaStack;
 use GuzzleHttp\Psr7\Uri;
 use Rokka\Client\Core\Stack;
+use Rokka\Client\UriHelper;
 
 /**
  * Implements hook_ENTITY_TYPE_presave().
@@ -35,7 +34,7 @@ function rokka_image_style_presave(ImageStyle $entity) {
   if ($stackOptionsForm['rokka_webp_quality'] > 0) {
     $stackOptions['webp.quality'] = $stackOptionsForm['rokka_webp_quality'];
   }
-  if ($stackOptionsForm['rokka_autoformat'] === 'none' || $stackOptionsForm['rokka_autoformat'] === null) {
+  if ($stackOptionsForm['rokka_autoformat'] === 'none' || $stackOptionsForm['rokka_autoformat'] === NULL) {
     unset($stackOptions['autoformat']);
   }
   else {
@@ -127,11 +126,12 @@ function rokka_buildStackOperation(array $effect) {
 
 /**
  * @param \Drupal\image\Entity\ImageStyle $imageStyle
+ *
  * @return \Rokka\Client\Core\StackOperation[]
  */
-function rokka_getEffectStack(ImageStyle $imageStyle = null) {
+function rokka_getEffectStack(ImageStyle $imageStyle = NULL) {
 
-  if ($imageStyle === null) {
+  if ($imageStyle === NULL) {
     return [];
   }
   return !empty(rokka_buildStackOperationCollection($imageStyle->getEffects()
@@ -160,6 +160,7 @@ function rokka_camelCase($str, $classCase = FALSE) {
 
 /**
  * @param $variables
+ *
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
  */
 function rokka_preprocess_image_style_preview(&$variables) {
@@ -167,7 +168,7 @@ function rokka_preprocess_image_style_preview(&$variables) {
   $previewUri = new Uri($preview_url);
   $components = UriHelper::decomposeUri($previewUri);
 
-  if ($components === null) {
+  if ($components === NULL) {
     return;
   }
   /** @var \Drupal\rokka\RokkaService $rokkaService */
@@ -181,7 +182,7 @@ function rokka_preprocess_image_style_preview(&$variables) {
 
   $effectStack = rokka_getEffectStack($imageStyle);
   $stack = new Stack(NULL, $components['stack'], $effectStack);
-  if ($stackEntity instanceof  RokkaStack) {
+  if ($stackEntity instanceof RokkaStack) {
     $stackOptions = $stackEntity->getStackOptions();
     if (is_array($stackOptions)) {
       $stack->setStackOptions($stackOptions);
@@ -191,7 +192,7 @@ function rokka_preprocess_image_style_preview(&$variables) {
   $components->setStack($dynamicStack);
   $preview_url = UriHelper::composeUri($components, $previewUri);
   $variables['derivative']['rendered']['#uri'] = (string) $preview_url;
-  $variables['derivative']['url'] = (string)  $preview_url;
+  $variables['derivative']['url'] = (string) $preview_url;
   // We have to get the image from rokka to know its dimensions
   // that makes is a little bit slower, if anyone has a better idea..
   $image = @file_get_contents($preview_url);
@@ -245,8 +246,7 @@ function rokka_image_style_delete(ImageStyle $entity) {
       ->delete();
 
     return $client->deleteStack($entity->getName());
-  }
-  catch (Exception $e) {
+  } catch (Exception $e) {
     // If the Stack is not found, that means that it is already deleted.
     if (404 === $e->getCode()) {
       return TRUE;
@@ -277,8 +277,9 @@ function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
   /** @var \Drupal\rokka\RokkaService $rokkaService */
   $rokkaService = \Drupal::service('rokka.service');
   /** @var \Drupal\rokka\Entity\RokkaStack $stackEntity */
-  $stackEntity = $rokkaService->getEntityManager()->getStorage('rokka_stack')->load($form_object->getEntity()->get("name"));
-  if ($stackEntity instanceof  RokkaStack) {
+  $stackEntity = $rokkaService->getEntityManager()->getStorage('rokka_stack')->load($form_object->getEntity()
+    ->get("name"));
+  if ($stackEntity instanceof RokkaStack) {
     $stackOptions = $stackEntity->getStackOptions();
   }
   else {
@@ -385,7 +386,7 @@ function rokka_crop_presave($entity) {
     $focusArea = new \Rokka\Client\Core\DynamicMetadata\SubjectArea($x, $y, 1, 1);
     $metas = $rokkaService->loadRokkaMetadataByUri($fileUri);
     foreach ($metas as $meta) {
-      $newHash = $client->setDynamicMetadata($focusArea, $meta->getHash(), null, ['deletePrevious' => true]);
+      $newHash = $client->setDynamicMetadata($focusArea, $meta->getHash(), NULL, ['deletePrevious' => TRUE]);
       if ($newHash) {
         // Check if the old hash has been updated
         if ($meta->getHash() !== $newHash) {

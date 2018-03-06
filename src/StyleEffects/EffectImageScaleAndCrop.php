@@ -16,7 +16,7 @@ class EffectImageScaleAndCrop implements InterfaceEffectImage {
   public static function buildRokkaStackOperation($data) {
     $options = [
       'height' => ImageStyleHelper::operationNormalizeSize($data['height']),
-      'width'  => ImageStyleHelper::operationNormalizeSize($data['width']),
+      'width' => ImageStyleHelper::operationNormalizeSize($data['width']),
     ];
 
     return [

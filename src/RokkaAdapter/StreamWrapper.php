@@ -2,7 +2,6 @@
 
 namespace Drupal\rokka\RokkaAdapter;
 
-use Drupal\Component\FileSystem\RegexDirectoryIterator;
 use Drupal\rokka\Entity\RokkaMetadata;
 use GuzzleHttp\Psr7\CachingStream;
 use GuzzleHttp\Psr7\Stream;
@@ -14,23 +13,27 @@ use Rokka\Client\Image;
  */
 abstract class StreamWrapper {
 
-  /**
-   * @var \GuzzleHttp\Psr7\Stream*/
-  protected $body;
+  public static $supportedModes = ['w', 'r'];
 
   /**
-   * @var \Rokka\Client\Image*/
+   * @var \Rokka\Client\Image
+   */
   protected static $imageClient;
 
   /**
-   * @var string*/
+   * @var \GuzzleHttp\Psr7\Stream
+   */
+  protected $body;
+
+  /**
+   * @var string
+   */
   protected $uri;
 
   /**
-   * @var string*/
+   * @var string
+   */
   protected $mode;
-
-  public static $supportedModes = ['w', 'r'];
 
   /**
    * @param \Rokka\Client\Image $imageClient
@@ -42,27 +45,6 @@ abstract class StreamWrapper {
     static::$imageClient = $imageClient;
 
   }
-
-  /**
-   * @param \Rokka\Client\Core\SourceImage $sourceImage
-   *
-   * @return bool
-   */
-  abstract protected function doPostSourceImageSaved(SourceImage $sourceImage);
-
-  /**
-   * @param \Drupal\rokka\Entity\RokkaMetadata $meta
-   *
-   * @return bool
-   */
-  abstract protected function doPostSourceImageDeleted(RokkaMetadata $meta);
-
-  /**
-   * @param $uri
-   *
-   * @return \Rokka\Client\Core\SourceImageMetadata
-   */
-  abstract protected function doGetMetadataFromUri($uri);
 
   /**
    * Support for stat().
@@ -89,17 +71,17 @@ abstract class StreamWrapper {
   abstract public function url_stat($uri, $flags);
 
   /**
-   * Implements setUri().
-   */
-  public function setUri($uri) {
-    $this->uri = $uri;
-  }
-
-  /**
    * Implements getUri().
    */
   public function getUri() {
     return $this->uri;
+  }
+
+  /**
+   * Implements setUri().
+   */
+  public function setUri($uri) {
+    $this->uri = $uri;
   }
 
   /**
@@ -161,6 +143,107 @@ abstract class StreamWrapper {
   }
 
   /**
+   * Initialize the stream wrapper for a write only stream.
+   *
+   * @param array $params
+   *   Operation parameters.
+   * @param array $errors
+   *   Any encountered errors to append to.
+   *
+   * @return bool
+   */
+  protected function openWriteStream($params, &$errors) {
+    // We must check HERE if the underlying connection to Rokka is working fine
+    // instead of returning FALSE during stream_flush() and stream_close() if
+    // Rokka service is not available.
+    // Reason: The PHP core, in the "_php_stream_copy_to_stream_ex()" function, is
+    // not checking if the stream contents got successfully written after the
+    // source and destination streams have been opened.
+    try {
+      // @todo: Using listStack() invocation to check if Rokka is still alive,
+      // but we must use a better API invocation here!
+      self::$imageClient->listStacks(1);
+      $this->body = new Stream(fopen('php://temp', 'r+'));
+      return TRUE;
+    } catch (\Exception $e) {
+      $errors[] = $e;
+      return $this->triggerException($errors);
+    }
+  }
+
+  /**
+   * Trigger one or more errors.
+   *
+   * @param \Exception|\Exception[] $exceptions
+   * @param mixed $flags
+   *   If set to STREAM_URL_STAT_QUIET, then no error or
+   *   exception occurs.
+   *
+   * @return bool
+   */
+  protected function triggerException($exceptions, $flags = NULL) {
+    if ($flags & STREAM_URL_STAT_QUIET) {
+      // This is triggered with things like file_exists()
+      if ($flags & STREAM_URL_STAT_LINK) {
+        // This is triggered for things like is_link()
+        // return $this->formatUrlStat(false);
+      }
+      return FALSE;
+    }
+
+    $exceptions = is_array($exceptions) ? $exceptions : [$exceptions];
+    $messages = [];
+    /** @var \Exception $exception */
+    foreach ($exceptions as $exception) {
+      $messages[] = $exception->getMessage();
+    }
+
+    trigger_error(implode("\n", $messages), E_USER_WARNING);
+    return FALSE;
+  }
+
+  /**
+   * Initialize the stream wrapper for a read only stream.
+   *
+   * @param array $params
+   *   Operation parameters.
+   * @param array $errors
+   *   Any encountered errors to append to.
+   *
+   * @return bool
+   */
+  protected function openReadStream($params, &$errors) {
+    $meta = $this->doGetMetadataFromUri($this->uri);
+    if (empty($meta)) {
+      $errors[] = new \LogicException('Unable to determine the Rokka.io HASH for the current URI.', 404);
+      return $this->triggerException($errors);
+    }
+
+    try {
+      $sourceStream = fopen('php://temp', 'r+');
+      fwrite($sourceStream, self::$imageClient->getSourceImageContents($meta->getHash()));
+      rewind($sourceStream);
+      $this->body = new Stream($sourceStream, 'rb');
+
+      // Wrap the body in a caching entity body if seeking is allowed.
+      if (!$this->body->isSeekable()) {
+        $this->body = new CachingStream($this->body);
+      }
+    } catch (\Exception $e) {
+      $errors[] = $e;
+      return $this->triggerException($errors);
+    }
+    return TRUE;
+  }
+
+  /**
+   * @param $uri
+   *
+   * @return \Rokka\Client\Core\SourceImageMetadata
+   */
+  abstract protected function doGetMetadataFromUri($uri);
+
+  /**
    * Write data the to the stream.
    *
    * @param string $data
@@ -219,12 +302,18 @@ abstract class StreamWrapper {
 
       // Invoking Post-Save callback.
       return $this->doPostSourceImageSaved($image);
-    }
-    catch (\Exception $e) {
+    } catch (\Exception $e) {
       $this->body = NULL;
       return $this->triggerException($e);
     }
   }
+
+  /**
+   * @param \Rokka\Client\Core\SourceImage $sourceImage
+   *
+   * @return bool
+   */
+  abstract protected function doPostSourceImageSaved(SourceImage $sourceImage);
 
   /**
    * Support for fstat().
@@ -239,71 +328,6 @@ abstract class StreamWrapper {
     return [
       'size' => $this->body->getSize(),
     ];
-  }
-
-  /**
-   * Initialize the stream wrapper for a write only stream.
-   *
-   * @param array $params
-   *   Operation parameters.
-   * @param array $errors
-   *   Any encountered errors to append to.
-   *
-   * @return bool
-   */
-  protected function openWriteStream($params, &$errors) {
-    // We must check HERE if the underlying connection to Rokka is working fine
-    // instead of returning FALSE during stream_flush() and stream_close() if
-    // Rokka service is not available.
-    // Reason: The PHP core, in the "_php_stream_copy_to_stream_ex()" function, is
-    // not checking if the stream contents got successfully written after the
-    // source and destination streams have been opened.
-    try {
-      // @todo: Using listStack() invocation to check if Rokka is still alive,
-      // but we must use a better API invocation here!
-      self::$imageClient->listStacks(1);
-      $this->body = new Stream(fopen('php://temp', 'r+'));
-      return TRUE;
-    }
-    catch (\Exception $e) {
-      $errors[] = $e;
-      return $this->triggerException($errors);
-    }
-  }
-
-  /**
-   * Initialize the stream wrapper for a read only stream.
-   *
-   * @param array $params
-   *   Operation parameters.
-   * @param array $errors
-   *   Any encountered errors to append to.
-   *
-   * @return bool
-   */
-  protected function openReadStream($params, &$errors) {
-    $meta = $this->doGetMetadataFromUri($this->uri);
-    if (empty($meta)) {
-      $errors[] = new \LogicException('Unable to determine the Rokka.io HASH for the current URI.', 404);
-      return $this->triggerException($errors);
-    }
-
-    try {
-      $sourceStream = fopen('php://temp', 'r+');
-      fwrite($sourceStream, self::$imageClient->getSourceImageContents($meta->getHash()));
-      rewind($sourceStream);
-      $this->body = new Stream($sourceStream, 'rb');
-
-      // Wrap the body in a caching entity body if seeking is allowed.
-      if (!$this->body->isSeekable()) {
-        $this->body = new CachingStream($this->body);
-      }
-    }
-    catch (\Exception $e) {
-      $errors[] = $e;
-      return $this->triggerException($errors);
-    }
-    return TRUE;
   }
 
   /**
@@ -340,11 +364,17 @@ abstract class StreamWrapper {
     try {
       return self::$imageClient->deleteSourceImage($meta->getHash())
         && $this->doPostSourceImageDeleted($meta);
-    }
-    catch (\Exception $e) {
+    } catch (\Exception $e) {
       return $this->triggerException($e, STREAM_URL_STAT_QUIET);
     }
   }
+
+  /**
+   * @param \Drupal\rokka\Entity\RokkaMetadata $meta
+   *
+   * @return bool
+   */
+  abstract protected function doPostSourceImageDeleted(RokkaMetadata $meta);
 
   /**
    * Support for flock().
@@ -408,37 +438,6 @@ abstract class StreamWrapper {
    */
   public function chmod($mode) {
     return TRUE;
-  }
-
-  /**
-   * Trigger one or more errors.
-   *
-   * @param \Exception|\Exception[] $exceptions
-   * @param mixed $flags
-   *   If set to STREAM_URL_STAT_QUIET, then no error or
-   *   exception occurs.
-   *
-   * @return bool
-   */
-  protected function triggerException($exceptions, $flags = NULL) {
-    if ($flags & STREAM_URL_STAT_QUIET) {
-      // This is triggered with things like file_exists()
-      if ($flags & STREAM_URL_STAT_LINK) {
-        // This is triggered for things like is_link()
-        // return $this->formatUrlStat(false);
-      }
-      return FALSE;
-    }
-
-    $exceptions = is_array($exceptions) ? $exceptions : [$exceptions];
-    $messages = [];
-    /** @var \Exception $exception */
-    foreach ($exceptions as $exception) {
-      $messages[] = $exception->getMessage();
-    }
-
-    trigger_error(implode("\n", $messages), E_USER_WARNING);
-    return FALSE;
   }
 
   /**

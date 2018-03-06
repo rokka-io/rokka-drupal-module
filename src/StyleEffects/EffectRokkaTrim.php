@@ -21,6 +21,7 @@ class EffectRokkaTrim implements InterfaceEffectImage {
 
   /**
    * @param $value
+   *
    * @return mixed
    */
   protected static function normalizePercent($value) {
