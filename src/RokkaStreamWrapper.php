@@ -319,15 +319,13 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
    * @see drupal_dirname()
    */
   public function dirname($uri = NULL) {
-    if (!isset($uri)) {
-      $uri = $this->uri;
+    list($scheme, $target) = explode('://', $uri, 2);
+    $target = $this->getTarget($uri);
+    if (strpos($target, '/')) {
+      // If we matched a directory here, let's append '/' in the end.
+      $dirname = preg_replace('@/[^/]*$@', '', $target) . '/';
     }
-    $scheme = \Drupal::service('file_system')->uriScheme($uri);
-    $dirname = dirname(file_uri_target($uri));
-
-    // When the dirname() call above is given '$scheme://', it returns '.'.
-    // But '$scheme://.' is an invalid uri, so we return "$scheme://" instead.
-    if ($dirname == '.') {
+    else {
       $dirname = '';
     }
     return $scheme . '://' . $dirname;
