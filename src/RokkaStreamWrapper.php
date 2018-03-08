@@ -159,7 +159,7 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
 
     /** @var \Drupal\rokka\Entity\RokkaStack $stackEntity */
     $stackEntity = $this->rokkaService->loadStackByName($stack_name);
-    $outputFormat = 'jpg';
+    $outputFormat = $meta->getFormat() ?? 'jpg';
     if (!empty($stackEntity)) {
       // Let the rokka stack alter the output image format.
       $outputFormat = $stackEntity->getOutputFormat() ?? 'jpg';
