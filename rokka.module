@@ -58,7 +58,8 @@ function rokka_image_style_presave(ImageStyle $entity) {
   if (!empty($stackOptionsForm['rokka_autoformat'])) {
     $stackOptions['autoformat'] = $stackOptionsForm['rokka_autoformat'];
   }
-  if ($stackOptionsForm['rokka_autoformat'] === 'none' || $stackOptionsForm['rokka_autoformat'] === NULL) {
+  if (!empty($stackOptionsForm['rokka_autoformat']) && ($stackOptionsForm['rokka_autoformat'] === 'none' ||
+    $stackOptionsForm['rokka_autoformat'] === NULL)) {
     unset($stackOptions['autoformat']);
   }
 
@@ -107,12 +108,19 @@ function rokka_buildStackOperationCollection($effects) {
       [
         'id' => 'noop',
         'data' => NULL,
+        'weight' => 0
       ],
     ];
   }
 
   $operations = [];
   $currentId = 0;
+
+  // Sort effects by defined weight.
+  usort($effects, function($a, $b) {
+    return $a['weight'] - $b['weight'];
+  });
+
   foreach ($effects as $effect) {
     $ops = rokka_buildStackOperation($effect);
     if (!empty($ops)) {
