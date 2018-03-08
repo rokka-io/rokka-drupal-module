@@ -220,9 +220,9 @@ abstract class StreamWrapper {
     }
 
     try {
-      $sourceStream = fopen('php://temp', 'r+');
-      fwrite($sourceStream, self::$imageClient->getSourceImageContents($meta->getHash()));
-      rewind($sourceStream);
+      // Load the binary data directly from the source image or the image derivate.
+      $file_url = $this->getExternalUrl($this->uri);
+      $sourceStream = fopen($file_url, 'r');
       $this->body = new Stream($sourceStream, 'rb');
 
       // Wrap the body in a caching entity body if seeking is allowed.
