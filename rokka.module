@@ -318,8 +318,12 @@ function rokka_form_image_style_form_alter(&$form, &$form_state, $form_id) {
   $config = \Drupal::config('rokka.settings');
 
   /** @var \Drupal\rokka\Entity\RokkaStack $stackEntity */
-  $stackEntity = $rokkaService->getEntityManager()->getStorage('rokka_stack')->load($form_object->getEntity()
-    ->get("name"));
+  $stackEntity = NULL;
+  // Can be empty, if we create a new image style
+  if (!empty($form_object->getEntity()->get('name'))) {
+    $stackEntity = $rokkaService->getEntityManager()->getStorage('rokka_stack')->load($form_object->getEntity()
+      ->get('name'));
+  }
 
   if ($stackEntity instanceof RokkaStack) {
     $stackOptions = $stackEntity->getStackOptions();
