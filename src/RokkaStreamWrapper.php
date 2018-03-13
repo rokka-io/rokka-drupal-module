@@ -573,10 +573,10 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
     if ($meta) {
 
       // If the two images are the same we're done, just return true.
-      if ($meta->getHash() == $sourceImage->shortHash) {
+      if ($meta->getHash() == $sourceImage->hash) {
         $this->logger->debug('Image re-uploaded to Rokka for "{uri}": "{hash}" (hash did not change)', [
           'uri' => $this->uri,
-          'hash' => $sourceImage->shortHash,
+          'hash' => $sourceImage->hash,
         ]);
         return TRUE;
       }
@@ -584,11 +584,11 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
       $this->logger->debug('Image replaced on Rokka for "{uri}": "{hash}" (old hash: "{oldHash}")', [
         'uri' => $this->uri,
         'oldHash' => $meta->getHash(),
-        'hash' => $sourceImage->shortHash,
+        'hash' => $sourceImage->hash,
       ]);
 
       // Update the RokkaMetadata with the new data coming from the uploaded image.
-      $meta->hash = $sourceImage->shortHash;
+      $meta->hash = $sourceImage->hash;
       $meta->created = $sourceImage->created->getTimestamp();
       $meta->filesize = $sourceImage->size;
       $meta->setHeight($sourceImage->height);
@@ -598,12 +598,12 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
     else {
       $this->logger->debug('New Image uploaded to Rokka for "{uri}": "{hash}"', [
         'uri' => $this->uri,
-        'hash' => $sourceImage->shortHash,
+        'hash' => $sourceImage->hash,
       ]);
 
       $meta = RokkaMetadata::create([
         'uri' => $this->uri,
-        'hash' => $sourceImage->shortHash,
+        'hash' => $sourceImage->hash,
         'filesize' => $sourceImage->size,
         'created' => $sourceImage->created->getTimestamp(),
         'height' => $sourceImage->height,
