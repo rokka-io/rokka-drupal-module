@@ -18,6 +18,12 @@ class MetadataStorageSchema extends SqlContentEntityStorageSchema {
     $field_name = $storage_definition->getName();
 
     switch ($field_name) {
+      case 'hash':
+        $this->addSharedTableFieldIndex($storage_definition, $schema, TRUE);
+        break;
+      case 'binary_hash':
+        $this->addSharedTableFieldIndex($storage_definition, $schema, TRUE);
+        break;
       case 'uri':
         $this->addSharedTableFieldIndex($storage_definition, $schema, TRUE);
         break;

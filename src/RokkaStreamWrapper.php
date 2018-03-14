@@ -589,6 +589,7 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
 
       // Update the RokkaMetadata with the new data coming from the uploaded image.
       $meta->hash = $sourceImage->hash;
+      $meta->binary_hash = $sourceImage->binaryHash;
       $meta->created = $sourceImage->created->getTimestamp();
       $meta->filesize = $sourceImage->size;
       $meta->setHeight($sourceImage->height);
@@ -604,6 +605,7 @@ class RokkaStreamWrapper extends StreamWrapper implements StreamWrapperInterface
       $meta = RokkaMetadata::create([
         'uri' => $this->uri,
         'hash' => $sourceImage->hash,
+        'binary_hash' => $sourceImage->binaryHash,
         'filesize' => $sourceImage->size,
         'created' => $sourceImage->created->getTimestamp(),
         'height' => $sourceImage->height,

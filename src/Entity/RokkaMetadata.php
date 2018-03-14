@@ -37,6 +37,7 @@ use Drupal\user\UserInterface;
  *   entity_keys = {
  *     "id" = "id",
  *     "hash" = "hash",
+ *     "binary_hash" = "binary_hash",
  *     "uri" = "uri",
  *     "uuid" = "uuid",
  *     "uid" = "user_id",
@@ -99,6 +100,27 @@ class RokkaMetadata extends ContentEntityBase implements RokkaMetadataInterface 
     $fields['hash'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Hash'))
       ->setDescription(t('The Rokka.io hash (SHA1, 40 chars) of the file.'))
+      ->setSettings([
+        'max_length' => 40,
+        'not null' => TRUE,
+        'text_processing' => 0,
+      ])
+      ->setDefaultValue('')
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'string',
+        'weight' => -4,
+      ])
+      ->setDisplayOptions('form', [
+        'type' => 'string_textfield',
+        'weight' => -4,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['binary_hash'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Hash'))
+      ->setDescription(t('The Rokka.io binary hash of the file.'))
       ->setSettings([
         'max_length' => 40,
         'not null' => TRUE,
@@ -196,6 +218,22 @@ class RokkaMetadata extends ContentEntityBase implements RokkaMetadataInterface 
   /**
    * {@inheritdoc}
    */
+  public function getBinaryHash() {
+    return $this->get('binary_hash')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setBinaryHash($binary_hash) {
+    $this->set('binary_hash', $binary_hash);
+    return $this;
+  }
+
+
+  /**
+   * {@inheritdoc}
+   */
   public function getFilesize() {
     return $this->get('filesize')->value;
   }
@@ -264,7 +302,7 @@ class RokkaMetadata extends ContentEntityBase implements RokkaMetadataInterface 
    * {@inheritdoc}
    */
   public function setFormat($format) {
-    $this->set('width', $format);
+    $this->set('format', $format);
     return $this;
   }
 

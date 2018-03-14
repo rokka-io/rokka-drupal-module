@@ -108,6 +108,19 @@ class RokkaService implements RokkaServiceInterface {
   }
 
   /**
+   * @param string $uri
+   *
+   * @return \Drupal\Core\Entity\EntityInterface[]
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   */
+  public function loadRokkaMetadataByBinaryHash($binary_hash) {
+    $rokka_metadata_storage = \Drupal::entityTypeManager()
+      ->getStorage('rokka_metadata');
+
+    return $rokka_metadata_storage->loadByProperties(['binary_hash' => $binary_hash]);
+  }
+
+  /**
    * @param $name
    *
    * @return \Drupal\Core\Entity\EntityInterface|null

@@ -32,6 +32,51 @@ interface RokkaMetadataInterface extends ContentEntityInterface, EntityChangedIn
    */
   public function setHash($hash);
 
+
+  /**
+   * Sets the Rokka Metadata binary hash.
+   *
+   * @param string $binary_hash
+   *   The Rokka Metadata binary_hash.
+   *
+   * @return \Drupal\rokka\Entity\RokkaMetadataInterface
+   *   The called Rokka Metadata entity.
+   */
+  public function setBinaryHash($binary_hash);
+
+  /**
+   * Sets the Rokka Metadata height.
+   *
+   * @param string $height
+   *   The Rokka Metadata height.
+   *
+   * @return \Drupal\rokka\Entity\RokkaMetadataInterface
+   *   The called Rokka Metadata entity.
+   */
+  public function setHeight($height);
+
+  /**
+   * Sets the Rokka Metadata width.
+   *
+   * @param string $width
+   *   The Rokka Metadata $width.
+   *
+   * @return \Drupal\rokka\Entity\RokkaMetadataInterface
+   *   The called Rokka Metadata entity.
+   */
+  public function setWidth($width);
+
+  /**
+   * Sets the Rokka Metadata image format.
+   *
+   * @param string $width
+   *   The Rokka Metadata $image_format.
+   *
+   * @return \Drupal\rokka\Entity\RokkaMetadataInterface
+   *   The called Rokka Metadata entity.
+   */
+  public function setFormat($image_format);
+
   /**
    * Gets the Rokka Metadata creation timestamp.
    *
