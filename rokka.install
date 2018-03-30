@@ -4,6 +4,9 @@
  * @file
  */
 
+use Drupal\image\Entity\ImageStyle;
+use Drupal\rokka\Entity\RokkaStack;
+
 /**
  *  Install hooks can be reset using drush ev "\Drupal::keyValue('system.schema')->set('rokka', (int) 8000)";
  */
@@ -13,11 +16,17 @@
  *
  */
 function rokka_update_8001(&$sandbox) {
-  $entity_type = \Drupal::service('entity_type.manager')->getDefinition('rokka_metadata');
-  \Drupal::service('entity.definition_update_manager')->updateEntityType($entity_type);
+  $styles = ImageStyle::loadMultiple();
+  $stacks = RokkaStack::loadMultiple();
 
-  $entity_type = \Drupal::service('entity_type.manager')->getDefinition('rokka_stack');
-  \Drupal::service('entity.definition_update_manager')->updateEntityType($entity_type);
+  // Find all and create all missing stacks on rokka.io
+  foreach ($styles as $style) {
+    /** @var ImageStyle $style */
+    if (empty($stacks[$style->getName()]) || $options['force']) {
+      // Create stack
+      rokka_image_style_presave($style);
+    }
+  }
 }
 
 // **
