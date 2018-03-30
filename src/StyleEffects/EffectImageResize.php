@@ -16,7 +16,7 @@ class EffectImageResize implements InterfaceEffectImage {
   public static function buildRokkaStackOperation($data) {
 
     $options = [
-      'upscale' => boolval($data['upscale']),
+      'upscale' => (isset($data['upscale'])) ? (boolean) $data['upscale'] : FALSE,
       'height' => ImageStyleHelper::operationNormalizeSize($data['height']),
       'width' => ImageStyleHelper::operationNormalizeSize($data['width']),
     ];
