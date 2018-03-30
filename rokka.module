@@ -42,15 +42,19 @@ function rokka_image_style_presave(ImageStyle $entity) {
   $stackOptions = [];
 
   // Set jpg quality.
-  $stackOptions['jpg.quality'] = $config->get('jpg_quality');
-  if (!empty($stackOptionsForm['rokka_jpg_quality']) && $stackOptionsForm['rokka_jpg_quality'] > 0) {
-    $stackOptions['jpg.quality'] = $stackOptionsForm['rokka_jpg_quality'];
+  if (!empty($stackOptionsForm['rokka_jpg_quality']) && (integer) $stackOptionsForm['rokka_jpg_quality'] >= 1) {
+    $stackOptions['jpg.quality'] = (integer) $stackOptionsForm['rokka_jpg_quality'];
+  }
+  elseif ((int) $config->get('jpg_quality') >= 1) {
+    $stackOptions['jpg.quality'] = $config->get('jpg_quality');
   }
 
   // Set webp quality.
-  $stackOptions['webp.quality'] = $config->get('webp_quality');
-  if (!empty($stackOptionsForm['rokka_webp_quality']) && $stackOptionsForm['rokka_webp_quality'] > 0) {
-    $stackOptions['webp.quality'] = $stackOptionsForm['rokka_webp_quality'];
+  if (!empty($stackOptionsForm['rokka_webp_quality']) && (integer) $stackOptionsForm['rokka_webp_quality'] >= 1) {
+    $stackOptions['webp.quality'] = (integer) $stackOptionsForm['rokka_webp_quality'];
+  }
+  elseif ((int) $config->get('webp_quality') >= 1) {
+    $stackOptions['webp.quality'] = $config->get('webp_quality');
   }
 
   // Set autoformat value.
