@@ -226,7 +226,7 @@ function rokka_preprocess_image_style_preview(&$variables) {
       $stack->setStackOptions($stackOptions);
     }
   }
-  $dynamicStack = $stack->getDynamicUri();
+  $dynamicStack = $stack->getDynamicUriString();
   $components->setStack($dynamicStack);
   $preview_url = UriHelper::composeUri($components, $previewUri);
   $variables['derivative']['rendered']['#uri'] = (string) $preview_url;
