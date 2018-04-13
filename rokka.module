@@ -157,10 +157,10 @@ function rokka_buildStackOperation(array $effect) {
     $ret = $className::buildRokkaStackOperation($effect['data']);
   }
   else {
-    // watchdog('rokka', 'Can not convert effect "%effect" to Rokka.io StackOperation: "%class" Class missing!', array(
-    //      '%effect' => $name,
-    //      '%class' => $className,
-    //    ));.
+    \Drupal::logger('rokka')->error('Can not convert effect "%effect" to Rokka.io StackOperation: "%class" Class missing!', [
+      '%effect' => $name,
+      '%class' => $className,
+    ]);
   }
 
   return $ret;
