@@ -19,7 +19,7 @@
     ],
     "require": {
         "php": "^7.0",
-        "rokka/client": "dev-templatehelper as 1.3.0-dev"
+        "rokka/client": "^1.3.0"
     },
     "autoload": {
         "psr-4": {
