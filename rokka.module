@@ -469,8 +469,8 @@ function rokka_update_crop_metadata($crop) {
   // Instead, they are used as the default SubjectArea for all crops that are
   // not using a named MultiArea.
   if ($crop->bundle() == 'focal_point') {
-    $position = $crop->getPosition();
-    $dynamic_md = new SubjectArea($position['x'], $position['y'], 1, 1);
+    $coords = $crop->anchor();
+    $dynamic_md = new SubjectArea($coords['x'], $coords['y'], 1, 1);
   }
   else {
     // For multiarea crops, we need to send all custom crops on the image in one
@@ -488,10 +488,10 @@ function rokka_update_crop_metadata($crop) {
         continue;
       }
 
-      $position = $image_crop->position();
+      $coords = $image_crop->anchor();
       $size = $image_crop->size();
 
-      $area_crop = new CropArea($position['x'], $position['y'], $size['width'], $size['height']);
+      $area_crop = new CropArea($coords['x'], $coords['y'], $size['width'], $size['height']);
 
       $areas[$image_crop->bundle()] = [$area_crop];
     }
