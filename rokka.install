@@ -4,6 +4,11 @@
  * @file
  */
 
+use Drupal\Core\Database\Database;
+use Drupal\crop\Entity\Crop;
+use Drupal\image\Entity\ImageStyle;
+use Drupal\rokka\Entity\RokkaStack;
+
 /**
  *  Install hooks can be reset using drush ev "\Drupal::keyValue('system.schema')->set('rokka', (int) 8000)";
  */
@@ -13,13 +18,57 @@
  *
  */
 function rokka_update_8001(&$sandbox) {
-  $entity_type = \Drupal::service('entity_type.manager')->getDefinition('rokka_metadata');
-  \Drupal::service('entity.definition_update_manager')->updateEntityType($entity_type);
+  $styles = ImageStyle::loadMultiple();
+  $stacks = RokkaStack::loadMultiple();
 
-  $entity_type = \Drupal::service('entity_type.manager')->getDefinition('rokka_stack');
-  \Drupal::service('entity.definition_update_manager')->updateEntityType($entity_type);
+  // Find all and create all missing stacks on rokka.io
+  foreach ($styles as $style) {
+    /** @var ImageStyle $style */
+    if (empty($stacks[$style->getName()]) || $options['force']) {
+      // Create stack
+      rokka_image_style_presave($style);
+    }
+  }
 }
 
+/**
+ * Update all Stacks on Rokka with new Crop settings.
+ */
+function rokka_update_8002() {
+  $styles = ImageStyle::loadMultiple();
+
+  foreach ($styles as $style) {
+    // Create stack
+    rokka_image_style_presave($style);
+  }
+}
+
+/**
+ * Update cropping metadata for all existing images.
+ */
+function rokka_update_8003() {
+  $crop_rows = Database::getConnection()
+    ->query("
+      SELECT * FROM crop_field_data AS cfd
+      WHERE cfd.type != 'focal_point'
+      AND cfd.uri LIKE 'rokka:%'
+    ")
+    ->fetchAll();
+
+  // Flatten list based on entity ID to deduplicate the work.
+  $crop_ids = [];
+  foreach ($crop_rows as $row) {
+    $crop_ids[$row->entity_id] = $row->cid;
+  }
+
+  foreach ($crop_ids as $crop_id) {
+    rokka_update_crop_metadata(Crop::load($crop_id));
+  }
+
+  return t('Updated crop metadata for crop IDs: @ids', [
+    '@ids' => implode(', ', $crop_ids),
+  ]);
+}
 // **
 // * @file
 // * Install, update and uninstall functions for the Rokka module.

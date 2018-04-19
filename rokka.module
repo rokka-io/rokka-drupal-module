@@ -6,7 +6,11 @@
 
 use Drupal\image\Entity\ImageStyle;
 use Drupal\rokka\Entity\RokkaStack;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Psr7\Uri;
+use Rokka\Client\Core\DynamicMetadata\CropArea;
+use Rokka\Client\Core\DynamicMetadata\MultiAreas;
+use Rokka\Client\Core\DynamicMetadata\SubjectArea;
 use Rokka\Client\Core\Stack;
 use Rokka\Client\UriHelper;
 
@@ -42,15 +46,19 @@ function rokka_image_style_presave(ImageStyle $entity) {
   $stackOptions = [];
 
   // Set jpg quality.
-  $stackOptions['jpg.quality'] = $config->get('jpg_quality');
-  if (!empty($stackOptionsForm['rokka_jpg_quality']) && $stackOptionsForm['rokka_jpg_quality'] > 0) {
-    $stackOptions['jpg.quality'] = $stackOptionsForm['rokka_jpg_quality'];
+  if (!empty($stackOptionsForm['rokka_jpg_quality']) && (integer) $stackOptionsForm['rokka_jpg_quality'] >= 1) {
+    $stackOptions['jpg.quality'] = (integer) $stackOptionsForm['rokka_jpg_quality'];
+  }
+  elseif ((int) $config->get('jpg_quality') >= 1) {
+    $stackOptions['jpg.quality'] = $config->get('jpg_quality');
   }
 
   // Set webp quality.
-  $stackOptions['webp.quality'] = $config->get('webp_quality');
-  if (!empty($stackOptionsForm['rokka_webp_quality']) && $stackOptionsForm['rokka_webp_quality'] > 0) {
-    $stackOptions['webp.quality'] = $stackOptionsForm['rokka_webp_quality'];
+  if (!empty($stackOptionsForm['rokka_webp_quality']) && (integer) $stackOptionsForm['rokka_webp_quality'] >= 1) {
+    $stackOptions['webp.quality'] = (integer) $stackOptionsForm['rokka_webp_quality'];
+  }
+  elseif ((int) $config->get('webp_quality') >= 1) {
+    $stackOptions['webp.quality'] = $config->get('webp_quality');
   }
 
   // Set autoformat value.
@@ -153,10 +161,10 @@ function rokka_buildStackOperation(array $effect) {
     $ret = $className::buildRokkaStackOperation($effect['data']);
   }
   else {
-    // watchdog('rokka', 'Can not convert effect "%effect" to Rokka.io StackOperation: "%class" Class missing!', array(
-    //      '%effect' => $name,
-    //      '%class' => $className,
-    //    ));.
+    \Drupal::logger('rokka')->error('Can not convert effect "%effect" to Rokka.io StackOperation: "%class" Class missing!', [
+      '%effect' => $name,
+      '%class' => $className,
+    ]);
   }
 
   return $ret;
@@ -430,29 +438,91 @@ function rokka_setValueForField($formFieldName, $stackOptionName, &$form, $userI
 }
 
 /**
- * Implements hook_crop_presave.
- *
- * Save focalpoint data as dynamic metadata to rokka.
- *
+ * Implements hook_crop_insert().
  */
-function rokka_crop_presave($entity) {
-  if ($entity instanceof \Drupal\crop\Entity\Crop) {
-    /** @var \Drupal\rokka\RokkaService $rokkaService */
-    $rokkaService = \Drupal::service('rokka.service');
-    $client = $rokkaService->getRokkaImageClient();
+function rokka_crop_insert($entity) {
+  if ($entity instanceOf \Drupal\crop\CropInterface) {
+    rokka_update_crop_metadata($entity);
+  }
+}
 
-    $fileUri = $entity->uri->value;
-    $x = max(0, (int) $entity->x->value);
-    $y = max(0, (int) $entity->y->value);
-    $focusArea = new \Rokka\Client\Core\DynamicMetadata\SubjectArea($x, $y, 1, 1);
-    $metas = $rokkaService->loadRokkaMetadataByUri($fileUri);
+/**
+ * Implements hook_crop_update().
+ */
+function rokka_crop_update($entity) {
+  if ($entity instanceOf \Drupal\crop\CropInterface) {
+    rokka_update_crop_metadata($entity);
+  }
+}
+
+/**
+ * Update cropping metadata in Rokka.
+ *
+ * @param \Drupal\crop\CropInterface $crop
+ */
+function rokka_update_crop_metadata($crop) {
+  /** @var \Drupal\rokka\RokkaService $rokkaService */
+  $rokkaService = \Drupal::service('rokka.service');
+  $client = $rokkaService->getRokkaImageClient();
+
+  // Special handling for focal points, they are not saved using MultiAreas.
+  // Instead, they are used as the default SubjectArea for all crops that are
+  // not using a named MultiArea.
+  if ($crop->bundle() == 'focal_point') {
+    $coords = $crop->anchor();
+    $dynamic_md = new SubjectArea($coords['x'], $coords['y'], 1, 1);
+  }
+  else {
+    // For multiarea crops, we need to send all custom crops on the image in one
+    // single structure, so load them all first.
+    $crop_storage = \Drupal::entityTypeManager()
+      ->getStorage('crop');
+
+    $image_crops = $crop_storage->loadByProperties(['uri' => $crop->uri->value]);
+
+    $areas = [];
+
+    foreach ($image_crops as $image_crop) {
+      // Skip focal_point crops here, these are handled above.
+      if ($image_crop->bundle() == 'focal_point') {
+        continue;
+      }
+
+      $coords = $image_crop->anchor();
+      $size = $image_crop->size();
+
+      $area_crop = new CropArea($coords['x'], $coords['y'], $size['width'], $size['height']);
+
+      $areas[$image_crop->bundle()] = [$area_crop];
+    }
+
+    if (count($areas) > 0) {
+      $dynamic_md = new MultiAreas($areas);
+    }
+  }
+
+  if (!empty($dynamic_md)) {
+    $metas = $rokkaService->loadRokkaMetadataByUri($crop->uri->value);
     foreach ($metas as $meta) {
-      $newHash = $client->setDynamicMetadata($focusArea, $meta->getHash(), NULL, ['deletePrevious' => TRUE]);
-      if ($newHash) {
-        // Check if the old hash has been updated
-        if ($meta->getHash() !== $newHash) {
-          $meta->hash = $newHash;
-          $meta->save();
+      $old_hash = $meta->getHash();
+
+      try {
+        $newHash = $client->setDynamicMetadata($dynamic_md, $old_hash, NULL, ['deletePrevious' => TRUE]);
+        if ($newHash) {
+          // Check if the old hash has been updated
+          if ($meta->getHash() !== $newHash) {
+            $meta->hash = $newHash;
+            $meta->save();
+          }
+        }
+      }
+      catch (ClientException $clientException) {
+        // Fail silently if image has been deleted from Rokka.
+        if ($clientException->getCode() == 404) {
+          continue;
+        }
+        else {
+          throw $clientException;
         }
       }
     }
